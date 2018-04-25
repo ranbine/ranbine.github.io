@@ -1,3 +1,2 @@
-# ranbine.github.io
-learning shedule
-ranbine.github.io
+
+www.ranbine.github.io
