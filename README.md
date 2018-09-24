@@ -1,2 +1,1 @@
-
-www.ranbine.github.io
+ranbine.github.io
