@@ -1,0 +1,102 @@
+/* Kiro Lab — Shared Base Styles */
+/* All sub-pages import this for consistent nav, footer, fonts, and variables */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+/* Variables */
+:root {
+  --kb-bg: #f8f9fa;
+  --kb-surface: #fff;
+  --kb-text: #1d2630;
+  --kb-text-s: #3e4853;
+  --kb-text-m: #5b6b79;
+  --kb-accent: #4099ff;
+  --kb-border: #dbe0e5;
+}
+
+/* Nav bar */
+.kiro-nav {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: var(--kb-surface);
+  border-bottom: 1px solid var(--kb-border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  font-family: 'Noto Sans SC', -apple-system, sans-serif;
+}
+.kiro-nav .brand {
+  font-family: 'Noto Serif SC', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--kb-text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kiro-nav .brand i {
+  color: var(--kb-accent);
+}
+.kiro-nav .back-link {
+  margin-left: auto;
+  font-size: .8rem;
+  color: var(--kb-text-m);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .15s;
+}
+.kiro-nav .back-link:hover {
+  color: var(--kb-accent);
+}
+.kiro-nav .back-link i {
+  font-size: .7rem;
+}
+
+/* Nav controls (lang switch, theme toggle) */
+.kiro-nav .nav-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.kiro-nav .nav-controls button {
+  border: none;
+  background: var(--kb-surface);
+  border: 1.5px solid var(--kb-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--kb-text-m);
+  transition: all .15s;
+}
+.kiro-nav .nav-controls button.active,
+.kiro-nav .nav-controls button:hover {
+  background: var(--kb-accent);
+  color: #fff;
+  border-color: var(--kb-accent);
+}
+
+/* Footer */
+.kiro-footer {
+  border-top: 1px solid var(--kb-border);
+  padding: 24px;
+  text-align: center;
+  color: var(--kb-text-m);
+  font-size: .8rem;
+  font-family: 'Noto Sans SC', -apple-system, sans-serif;
+}
+
+/* Focus accessibility */
+:focus-visible {
+  outline: 2px solid var(--kb-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

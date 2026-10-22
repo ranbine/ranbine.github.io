@@ -1,0 +1,6 @@
+# Legacy site content (public since 2019-2022) and vendored third-party libs.
+# New content must NOT be added here — fix the leak instead.
+luck/*
+award/*
+display/*
+js vip20/*
