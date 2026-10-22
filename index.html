@@ -1,85 +1,208 @@
-<!doctype html>
-<html>
- <head>
-  <meta charset="utf-8">
-  <title>Ranbine's Blog</title>
-  <style type="text/css">
-    h1{color:#66F;}
-    p{color:blue;}
-    h2{color:purple;}
-  </style>
- </head>
- <body>
- <p>
- <figure align="center">
-   <a href="https://ranbine.github.io/js%20vip20/index.html" target="game">
-	   <img alt="JUST AN IMAGE" align="middle" width="48%" src="hello.JPG" /></a>
-	   <!-- <img alt="JUST AN IMAGE" align="middle" width="48%" src="hello.JPG" > -->
-   </figure>
-</p>
-   
-  
-   <h1 align="center">THE HARDER YOU TRY MORE LUCKY YOU ARE!! </h1>
-   <h1 align="center"> TRUST YOURSELF!!!</h1>
-   <h1 align="center">YOU CAN MAKE IT!!</h1>
-    <table border="1"  cellspacing="2" align="center" bordercolor="amber" style="width:100%;" table-layout:fixed>
-     <caption><h2> Time-Table</h2></caption>
-     <tr>
-      <th align="Center"><p>Monday</p></th>
-      <th align="Center"><p>Tuesday</p></th>
-	  <th align="Center"><p>Wednesday</p></th>
-	  <th align="Center"><p>Thursday</p></th>
-	  <th align="Center"><p>Friday</p></th>
-	  <th align="Center"><p>Saturday</p></th>
-	  <th align="Center"><p>Sunday</p></th>
-	 </tr>
-	 <tr>
-	  <td align="center" rowspan="2">Course</td>
-	  <td align="center" rowspan="4">Coding</td>
-	  <td align="center" rowspan="2">Testing</td>
-	  <td align="center" rowspan="2">Course</td>
-	  <td align="center" rowspan="4">Course</td>
-	  <td align="center" rowspan="4">Driving|Coding|Testing</td>
-	  <td align="center" rowspan="2">Testing</td>
-	  
-	 </tr>
-	 <tr>
-	 
-	 </tr>
-	 <tr>
-	  <td align="center" rowspan="2">Testing</td>
-      <td align="center" rowspan="2">Course</td>
-      <td align="center" rowspan="4">Coding</td>
-      <td align="center" rowspan="2">Coding</td>
-	 </tr>
-	 <tr>
-	 
-	 </tr>
-	 <tr>
-	 <td align="center" rowspan="4">Course</td>
-	  <td align="center" rowspan="2">Course</td>
-	  <td align="center" rowspan="4">Coding</td>
-	  <td align="center" rowspan="4">Coding|Driving</td>
-	  <td align="center" rowspan="6">Relaxing</td>
-	  <td align="center" rowspan="6">Driving|Coding|Testing</td>
-	  
-	 </tr>
-	 <tr></tr>
-     <tr>
-      <td align="center" rowspan="2">Testing</td>
-      <td align="center" rowspan="2">Course</td>
-      
-     </tr>
-     <tr></tr>
-     <tr>
-      <td align="center" rowspan="2">Coding</td>
-      <td align="center" rowspan="2">Training</td>
-      <td align="center" rowspan="2">Coding</td>
-      <td align="center" rowspan="2">Training</td>
-      <td align="center" rowspan="2">Coding</td>
-     </tr>
-     
-     
-	</table> 
- </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiro Lab — Personal AI Workflow System</title>
+<meta name="description" content="A rule-driven personal workflow framework for an AI coding agent: startup digest, discipline patterns, sub-agents, quality gates and bilingual HTML reports.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kiro-base.css">
+<style>
+:root{
+  --kb-bg:#f8f9fa;--kb-surface:#fff;--kb-text:#1d2630;--kb-text-s:#3e4853;--kb-text-m:#5b6b79;
+  --kb-accent:#4099ff;--kb-border:#dbe0e5;--kb-code:#f1f3f5;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Roboto,system-ui,sans-serif;background:var(--kb-bg);color:var(--kb-text);line-height:1.65}
+html[lang="zh-CN"] .en, html[lang="en"] .zh{display:none}
+a{color:var(--kb-accent);text-decoration:none}
+a:hover{text-decoration:underline}
+a:focus-visible,button:focus-visible{outline:2px solid var(--kb-accent);outline-offset:2px}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;padding:6px 10px;z-index:200}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--kb-accent);z-index:100}
+.kiro-nav .nav-controls button[aria-pressed="true"]{background:var(--kb-accent);color:#fff;border-color:var(--kb-accent)}
+.wrap{max-width:900px;margin:0 auto;padding:48px 24px 48px}
+header.hero{text-align:center;margin-bottom:48px}
+.eyebrow{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--kb-accent);font-weight:500}
+h1{font-size:40px;margin:8px 0 12px;line-height:1.2}
+.lead{font-size:18px;color:var(--kb-text-s);max-width:680px;margin:0 auto}
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
+.pill{font-size:12px;border:1px solid var(--kb-border);background:var(--kb-surface);border-radius:999px;padding:4px 12px;color:var(--kb-text-m)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;border-top:1px solid var(--kb-border);border-bottom:1px solid var(--kb-border);padding:12px 0;margin-bottom:40px;font-size:14px}
+nav.toc a{color:var(--kb-text-m)}nav.toc a.active{color:var(--kb-accent);font-weight:500}
+section{margin-bottom:56px;scroll-margin-top:24px}
+h2{font-size:24px;margin:0 0 16px;display:flex;gap:12px;align-items:baseline}
+h2 .num{font-family:"Roboto Mono",monospace;font-size:14px;color:var(--kb-accent)}
+p{color:var(--kb-text-s)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:var(--kb-surface);border:1px solid var(--kb-border);border-radius:12px;padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:16px}
+.card p{margin:0;font-size:14px}
+.tag{display:inline-block;font-size:11px;font-family:"Roboto Mono",monospace;background:var(--kb-code);border-radius:4px;padding:1px 6px;margin-top:10px;color:var(--kb-text-m)}
+pre{position:relative;background:var(--kb-code);border:1px solid var(--kb-border);border-radius:10px;padding:16px;overflow:auto;font:13px/1.55 "Roboto Mono",monospace;color:var(--kb-text)}
+code{font-family:"Roboto Mono",monospace;font-size:.92em;background:var(--kb-code);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.copy{position:absolute;top:8px;right:8px;font-size:12px;border:1px solid var(--kb-border);background:var(--kb-surface);border-radius:6px;padding:2px 8px;cursor:pointer}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px}
+.flow .step{background:var(--kb-surface);border:1px solid var(--kb-border);border-radius:8px;padding:8px 12px}
+.flow .arrow{color:var(--kb-text-m)}
+table{width:100%;border-collapse:collapse;background:var(--kb-surface);border:1px solid var(--kb-border);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--kb-border)}
+th{background:var(--kb-code);font-weight:500}
+tr:last-child td{border-bottom:0}
+.cta{display:inline-block;margin-top:8px;background:var(--kb-accent);color:#fff;border-radius:8px;padding:10px 18px;font-weight:500}
+.cta:hover{text-decoration:none;opacity:.9}
+footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;color:var(--kb-text-m);text-align:center}
+@media (max-width:600px){h1{font-size:30px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="progress" aria-hidden="true"></div>
+<nav class="kiro-nav" aria-label="Site">
+  <a href="./" class="brand">⚡ Kiro Lab</a>
+  <div class="nav-controls" role="group" aria-label="Language">
+    <button id="bZh" type="button" aria-pressed="true" onclick="setLang('zh-CN')">中文</button>
+    <button id="bEn" type="button" aria-pressed="false" onclick="setLang('en')">EN</button>
+  </div>
+</nav>
+
+<main class="wrap" id="main">
+  <header class="hero">
+    <div class="eyebrow">Kiro Lab</div>
+    <h1><span class="zh">个人 AI 工作流系统</span><span class="en">A Personal AI Workflow System</span></h1>
+    <p class="lead">
+      <span class="zh">把"和 AI 编程助手协作"这件事工程化：用规则文件约束行为、用脚本收集状态、用子 agent 分工、用质量门把关，所有经验写成文件而不是靠记忆。</span>
+      <span class="en">Engineering the way I work with an AI coding agent: rule files shape behavior, scripts collect state, sub-agents split the work, quality gates guard output — and every lesson is written down, not remembered.</span>
+    </p>
+    <div class="pills">
+      <span class="pill">kiro-cli</span><span class="pill">Markdown rules</span><span class="pill">Python · Bash</span><span class="pill">Sub-agents</span><span class="pill">Bilingual HTML</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#why"><span class="zh">动机</span><span class="en">Why</span></a>
+    <a href="#arch"><span class="zh">架构</span><span class="en">Architecture</span></a>
+    <a href="#startup"><span class="zh">启动流程</span><span class="en">Startup</span></a>
+    <a href="#agents"><span class="zh">子 Agent</span><span class="en">Sub-agents</span></a>
+    <a href="#discipline"><span class="zh">纪律框架</span><span class="en">Discipline</span></a>
+    <a href="#portable"><span class="zh">可移植</span><span class="en">Portability</span></a>
+    <a href="#samples"><span class="zh">示例</span><span class="en">Samples</span></a>
+  </nav>
+
+  <section id="why">
+    <h2><span class="num">01</span><span class="zh">为什么做这个</span><span class="en">Why</span></h2>
+    <div class="grid">
+      <div class="card"><h3><span class="zh">会话失忆</span><span class="en">Session amnesia</span></h3><p><span class="zh">每次新会话都要重新交代背景、偏好、上次做到哪。</span><span class="en">Every new session starts from zero: context, preferences, where we left off.</span></p></div>
+      <div class="card"><h3><span class="zh">口头承诺不可靠</span><span class="en">Verbal promises don't stick</span></h3><p><span class="zh">"下次我会注意"没有载体。规则必须写进文件并 commit。</span><span class="en">"I'll remember next time" has no storage. A rule only exists once it's in a committed file.</span></p></div>
+      <div class="card"><h3><span class="zh">产出质量不稳定</span><span class="en">Uneven output quality</span></h3><p><span class="zh">报告断链、漏翻译、占位符残留——需要机械检查 + 语义把关。</span><span class="en">Broken links, missing translations, leftover placeholders — needs mechanical checks plus semantic review.</span></p></div>
+    </div>
+  </section>
+
+  <section id="arch">
+    <h2><span class="num">02</span><span class="zh">架构</span><span class="en">Architecture</span></h2>
+    <p><span class="zh">四层：配置 → 规则 → 脚本 → Agent。规则是唯一真相，脚本只负责确定性的数据收集，Agent 负责判断。</span><span class="en">Four layers: config → rules → scripts → agents. Rules are the source of truth, scripts do deterministic collection, agents do judgment.</span></p>
+<pre><code>config/paths.env          single source of truth for every path (repo-relative)
+contexts/
+  workflow.md             startup priority, trigger words, red lines
+  preferences.md          communication + output style
+  rules/                  daily-flow, git-workflow, discipline, report-generation, ...
+  tips/                   reusable know-how, each bound to a trigger in analysis-checklist
+bin/
+  kiro-startup-hook.sh    agentSpawn hook → compact digest injected into context
+  kiro-doctor.py          operational health      validate-kiro.py  structural checks
+  review-artifact.py      quality-gate scorer     run-agent.sh      spawn a sub-agent process
+  push-queue.py           push rate-limit + deferred/blocked queues
+agents/*.json.tmpl        kiro-lab (main) · reviewer · html-generator · health-checker
+templates/                self-contained bilingual report templates + style registry
+decisions/                ADR log: decision · alternatives · reason · revisit</code></pre>
+  </section>
+
+  <section id="startup">
+    <h2><span class="num">03</span><span class="zh">启动流程</span><span class="en">Startup flow</span></h2>
+    <p><span class="zh">会话一开始，hook 先跑完所有确定性检查，只把一段摘要注入上下文；Agent 按固定优先级逐项处理，一次只问一个问题。</span><span class="en">On session start a hook runs every deterministic check and injects only a short digest; the agent acts on it in a fixed priority order, one question at a time.</span></p>
+    <div class="flow" aria-label="Startup priority">
+      <span class="step"><span class="zh">触发词</span><span class="en">Trigger words</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">日报完整性</span><span class="en">Daily summary</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">认证检查</span><span class="en">Auth check</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">Pending 队列</span><span class="en">Pending queue</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">周期回顾提醒</span><span class="en">Review reminders</span></span>
+    </div>
+<pre><code>## kiro startup digest (agentSpawn hook, 2026-10-22 10:34)
+- daily-summary: complete ✓ (2026-10-21)
+- calendar: Thu W43
+- pending: 2 pending task(s) → rules/pending-queue.md
+- archive: nothing to archive ✓
+- push-queue: push queues empty ✓
+- auth-check: already run today ✓</code></pre>
+  </section>
+
+  <section id="agents">
+    <h2><span class="num">04</span><span class="zh">子 Agent 分工</span><span class="en">Sub-agents</span></h2>
+    <div class="grid">
+      <div class="card"><h3>html-generator</h3><p><span class="zh">按 style-registry 选模板、填数据、出预览。唯一的报告出口。</span><span class="en">Picks a template from the style registry, fills it, returns a preview. The single dispatch point for reports.</span></p><span class="tag">templates/</span></div>
+      <div class="card"><h3>reviewer</h3><p><span class="zh">质量门：脚本给读数（链接、双语、结构、体积），Agent 给结论 PUBLISH-OK / BLOCK / NEEDS-HUMAN。只诊断不修改。</span><span class="en">Quality gate: the script gives readings (links, bilingual, structure, size), the agent gives the verdict PUBLISH-OK / BLOCK / NEEDS-HUMAN. Diagnoses only.</span></p><span class="tag">review-artifact.py</span></div>
+      <div class="card"><h3>health-checker</h3><p><span class="zh">体检（运行状态）+ 校验（结构契约），给出修复建议。</span><span class="en">Checkup (runtime health) + validate (structural contracts), with fix suggestions.</span></p><span class="tag">kiro-doctor · validate-kiro</span></div>
+    </div>
+    <p style="margin-top:16px"><span class="zh">子 Agent 以独立进程启动（<code>run-agent.sh</code>），带深度保护防止递归，失败时回退到底层脚本并明确告知。</span><span class="en">Sub-agents run as separate processes (<code>run-agent.sh</code>) with a depth guard against recursion; on failure the caller falls back to the underlying script and says so.</span></p>
+  </section>
+
+  <section id="discipline">
+    <h2><span class="num">05</span><span class="zh">纪律框架</span><span class="en">Discipline framework</span></h2>
+    <p><span class="zh">同类错误出现两次就提炼成 pattern；pattern 毕业后进入三层纪律。每条规则都要挂来源和一次真实的翻车记录，没有实例的规则不收录。</span><span class="en">A mistake seen twice becomes a pattern; graduated patterns join a three-tier discipline. Every rule must cite its source and a real failure — no example, no rule.</span></p>
+    <table>
+      <thead><tr><th>Tier</th><th><span class="zh">何时扫</span><span class="en">When</span></th><th><span class="zh">示例</span><span class="en">Example</span></th></tr></thead>
+      <tbody>
+        <tr><td>D-A · Analysis</td><td><span class="zh">进入分析前</span><span class="en">Before analysis</span></td><td><span class="zh">给了路径就直接读，禁止验证性搜索</span><span class="en">Given a path, read it — no verification searches</span></td></tr>
+        <tr><td>D-O · Output</td><td><span class="zh">准备交付时</span><span class="en">Before output</span></td><td><span class="zh">写前去重：UPDATE &gt; MERGE &gt; ADD</span><span class="en">Dedup before write: UPDATE &gt; MERGE &gt; ADD</span></td></tr>
+        <tr><td>D-P · Process</td><td><span class="zh">多步流程中</span><span class="en">During multi-step flows</span></td><td><span class="zh">pre-push 报错先修，禁止 --no-verify</span><span class="en">Fix pre-push failures; never --no-verify</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="portable">
+    <h2><span class="num">06</span><span class="zh">可移植 &amp; 去敏感</span><span class="en">Portable &amp; leak-safe</span></h2>
+    <div class="grid">
+      <div class="card"><h3><span class="zh">路径单一来源</span><span class="en">One path registry</span></h3><p><span class="zh">脚本不写死路径，全部从 <code>config/paths.env</code>（相对路径）解析；机器相关值只放在被忽略的 <code>local.env</code>。</span><span class="en">No hard-coded paths: everything resolves from <code>config/paths.env</code> (relative); machine values live only in an ignored <code>local.env</code>.</span></p></div>
+      <div class="card"><h3><span class="zh">泄露防护</span><span class="en">Leak guard</span></h3><p><span class="zh">pre-commit / pre-push 扫描绝对路径、邮箱、密钥；私有敏感词表放在仓库外，敏感词本身永不发布。</span><span class="en">pre-commit / pre-push scan for absolute paths, emails and keys; a private denylist lives outside the repo so the words themselves are never published.</span></p></div>
+    </div>
+<pre><code># config/paths.env
+KIRO_RULES=contexts/rules
+KIRO_HISTORY=history
+KIRO_DOCS=docs
+
+# shell                              # python
+. bin/lib/paths.sh                   from kiro_paths import P
+ls "$KIRO_RULES"                     P["KIRO_RULES"].glob("*.md")</code></pre>
+  </section>
+
+  <section id="samples">
+    <h2><span class="num">07</span><span class="zh">示例报告</span><span class="en">Sample report</span></h2>
+    <p><span class="zh">由 html-generator 套用日报模板生成，数据为虚构示例。</span><span class="en">Generated by html-generator from the daily template; data is fictional.</span></p>
+    <a class="cta" href="samples/daily-report.html"><span class="zh">查看示例日报 →</span><span class="en">View sample daily report →</span></a>
+  </section>
+
+  <footer>
+    <span class="zh">Kiro Lab · 由 Kiro 协助构建</span><span class="en">Kiro Lab · built with Kiro</span> · <a href="archive/"><span class="zh">旧站存档</span><span class="en">Legacy site</span></a>
+  </footer>
+</main>
+
+<script>
+function setLang(l){
+  document.documentElement.lang=l;
+  document.getElementById('bZh').setAttribute('aria-pressed',l==='zh-CN');
+  document.getElementById('bEn').setAttribute('aria-pressed',l==='en');
+  try{localStorage.setItem('kl-lang',l)}catch(e){}
+}
+try{const s=localStorage.getItem('kl-lang');if(s)setLang(s)}catch(e){}
+addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-innerHeight;document.getElementById('progress').style.width=(h>0?scrollY/h*100:0)+'%'});
+const links=document.querySelectorAll('nav.toc a');
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>io.observe(s));
+document.querySelectorAll('pre').forEach(pre=>{const b=document.createElement('button');b.className='copy';b.type='button';b.textContent='Copy';b.setAttribute('aria-label','Copy code');b.onclick=()=>{navigator.clipboard.writeText(pre.querySelector('code').textContent);b.textContent='✓';setTimeout(()=>b.textContent='Copy',1500)};pre.appendChild(b)});
+</script>
+</body>
 </html>
