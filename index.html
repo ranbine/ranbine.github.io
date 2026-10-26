@@ -83,7 +83,7 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
       <span class="en">Engineering the way I work with an AI coding agent: rule files shape behavior, scripts collect state, sub-agents split the work, quality gates guard output — and every lesson is written down, not remembered.</span>
     </p>
     <div class="pills">
-      <span class="pill">kiro-cli</span><span class="pill">Markdown rules</span><span class="pill">Python · Bash</span><span class="pill">Sub-agents</span><span class="pill">Action gate</span><span class="pill">Bilingual HTML</span>
+      <span class="pill">kiro-cli</span><span class="pill">MCP</span><span class="pill">Lifecycle hooks</span><span class="pill">Python 3</span><span class="pill">Bash</span><span class="pill">Sub-agents</span><span class="pill">Action gate</span><span class="pill">Bilingual HTML</span>
     </div>
     <div class="hero-cta">
       <a class="cta" href="https://github.com/ranbine/lab"><span class="zh">GitHub 源码 →</span><span class="en">Source on GitHub →</span></a>
@@ -134,6 +134,21 @@ bin/
 agents/*.json.tmpl        kiro-lab (main) · reviewer · html-generator · health-checker
 templates/                self-contained bilingual report + showcase templates, style registry
 decisions/                ADR log: decision · alternatives · reason · revisit</code></pre>
+    <h3 style="margin:24px 0 10px;font-size:17px"><span class="zh">技术栈</span><span class="en">Tech stack</span></h3>
+    <table>
+      <thead><tr><th><span class="zh">层</span><span class="en">Layer</span></th><th><span class="zh">技术</span><span class="en">Technology</span></th><th><span class="zh">用在哪</span><span class="en">Where</span></th></tr></thead>
+      <tbody>
+        <tr><td><span class="zh">Agent 运行时</span><span class="en">Agent runtime</span></td><td>kiro-cli · <span class="zh">JSON agent 定义</span><span class="en">JSON agent definitions</span> · MCP tool servers</td><td><code>agents/*.json.tmpl</code></td></tr>
+        <tr><td><span class="zh">生命周期 hook</span><span class="en">Lifecycle hooks</span></td><td>agentSpawn · preToolUse · postToolUse · userPromptSubmit · stop</td><td><span class="zh">启动摘要、动作审核、会话内计时</span><span class="en">startup digest, action gate, in-session timing</span></td></tr>
+        <tr><td><span class="zh">核心语言</span><span class="en">Core language</span></td><td><span class="zh">Python 3 标准库（argparse、shlex、hashlib、zoneinfo、unittest）；仅 Markdown 转 PDF 的小工具用到 markdown2 + WeasyPrint</span><span class="en">Python 3 standard library (argparse, shlex, hashlib, zoneinfo, unittest); only the Markdown-to-PDF helper needs markdown2 + WeasyPrint</span></td><td><span class="zh">16 个脚本</span><span class="en">16 scripts</span> · <code>bin/</code></td></tr>
+        <tr><td>Shell</td><td>Bash</td><td><span class="zh">路径加载、安装、同步、git hook</span><span class="en">path loader, install, sync, git hooks</span></td></tr>
+        <tr><td><span class="zh">命令分析</span><span class="en">Command analysis</span></td><td><span class="zh">引号感知的 shell 解析：拆分 <code>; &amp;&amp; || |</code>、<code>$( )</code>，展开 <code>bash -c</code> / <code>ssh</code> / <code>find -exec</code></span><span class="en">quote-aware shell parsing: splits <code>; &amp;&amp; || |</code>, <code>$( )</code>, unwraps <code>bash -c</code> / <code>ssh</code> / <code>find -exec</code></span></td><td><code>bin/action-gate.py</code></td></tr>
+        <tr><td><span class="zh">策略与配置</span><span class="en">Policy &amp; config</span></td><td><span class="zh">JSON 策略模板 + 占位符展开 + 本地 overlay；加载失败即拒绝（fail-closed）</span><span class="en">JSON policy template + placeholder expansion + local overlay; fails closed on bad config</span></td><td><code>contexts/rules/gate-policy.json</code> · <code>config/</code></td></tr>
+        <tr><td><span class="zh">测试</span><span class="en">Testing</span></td><td><span class="zh">unittest，97 个测试，临时目录隔离</span><span class="en">unittest, 97 tests, temp-dir isolation</span></td><td><code>tests/</code></td></tr>
+        <tr><td>Git</td><td><span class="zh">pre-commit / pre-push 泄露扫描、push 限流队列</span><span class="en">pre-commit / pre-push leak scan, rate-limited push queue</span></td><td><code>scripts/hooks/</code> · <code>bin/push-queue.py</code></td></tr>
+        <tr><td><span class="zh">报告</span><span class="en">Reports</span></td><td><span class="zh">自包含 HTML/CSS/JS、双语、Chart.js（insight）、Mermaid（月报）、prefers-reduced-motion</span><span class="en">self-contained HTML/CSS/JS, bilingual, Chart.js (insight), Mermaid (monthly), prefers-reduced-motion</span></td><td><code>templates/</code></td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section id="startup">
