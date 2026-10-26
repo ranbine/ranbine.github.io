@@ -54,6 +54,10 @@ th{background:var(--kb-code);font-weight:500}
 tr:last-child td{border-bottom:0}
 .cta{display:inline-block;margin-top:8px;background:var(--kb-accent);color:#fff;border-radius:8px;padding:10px 18px;font-weight:500}
 .cta:hover{text-decoration:none;opacity:.9}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:20px}
+.cta.ghost{background:var(--kb-surface);color:var(--kb-accent);border:1px solid var(--kb-accent)}
+.lv{font-family:"Roboto Mono",monospace;font-weight:500;white-space:nowrap}
+.note{font-size:14px;border-left:3px solid var(--kb-accent);background:var(--kb-surface);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:16px}
 footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;color:var(--kb-text-m);text-align:center}
 @media (max-width:600px){h1{font-size:30px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -79,7 +83,11 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
       <span class="en">Engineering the way I work with an AI coding agent: rule files shape behavior, scripts collect state, sub-agents split the work, quality gates guard output — and every lesson is written down, not remembered.</span>
     </p>
     <div class="pills">
-      <span class="pill">kiro-cli</span><span class="pill">Markdown rules</span><span class="pill">Python · Bash</span><span class="pill">Sub-agents</span><span class="pill">Bilingual HTML</span>
+      <span class="pill">kiro-cli</span><span class="pill">Markdown rules</span><span class="pill">Python · Bash</span><span class="pill">Sub-agents</span><span class="pill">Action gate</span><span class="pill">Bilingual HTML</span>
+    </div>
+    <div class="hero-cta">
+      <a class="cta" href="https://github.com/ranbine/lab"><span class="zh">GitHub 源码 →</span><span class="en">Source on GitHub →</span></a>
+      <a class="cta ghost" href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
     </div>
   </header>
 
@@ -88,8 +96,10 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
     <a href="#arch"><span class="zh">架构</span><span class="en">Architecture</span></a>
     <a href="#startup"><span class="zh">启动流程</span><span class="en">Startup</span></a>
     <a href="#agents"><span class="zh">子 Agent</span><span class="en">Sub-agents</span></a>
+    <a href="#gate"><span class="zh">动作审核</span><span class="en">Action gate</span></a>
     <a href="#discipline"><span class="zh">纪律框架</span><span class="en">Discipline</span></a>
     <a href="#portable"><span class="zh">可移植</span><span class="en">Portability</span></a>
+    <a href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
     <a href="#samples"><span class="zh">示例</span><span class="en">Samples</span></a>
   </nav>
 
@@ -106,6 +116,8 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
     <h2><span class="num">02</span><span class="zh">架构</span><span class="en">Architecture</span></h2>
     <p><span class="zh">四层：配置 → 规则 → 脚本 → Agent。规则是唯一真相，脚本只负责确定性的数据收集，Agent 负责判断。</span><span class="en">Four layers: config → rules → scripts → agents. Rules are the source of truth, scripts do deterministic collection, agents do judgment.</span></p>
 <pre><code>config/paths.env          single source of truth for every path (repo-relative)
+config/local*.json|env    your identity / domain extensions (gitignored)
+shared-files.txt          framework files kept byte-identical across installs
 contexts/
   workflow.md             startup priority, trigger words, red lines
   preferences.md          communication + output style
@@ -116,8 +128,11 @@ bin/
   kiro-doctor.py          operational health      validate-kiro.py  structural checks
   review-artifact.py      quality-gate scorer     run-agent.sh      spawn a sub-agent process
   push-queue.py           push rate-limit + deferred/blocked queues
+  action-gate.py          preToolUse hook: classify every tool call (DENY / L3–L0)
+  gate-audit.py           weekly: propose policy changes from logged decisions
+  sync-shared.sh          keep the shared core identical with another install
 agents/*.json.tmpl        kiro-lab (main) · reviewer · html-generator · health-checker
-templates/                self-contained bilingual report templates + style registry
+templates/                self-contained bilingual report + showcase templates, style registry
 decisions/                ADR log: decision · alternatives · reason · revisit</code></pre>
   </section>
 
@@ -150,8 +165,32 @@ decisions/                ADR log: decision · alternatives · reason · revisit
     <p style="margin-top:16px"><span class="zh">子 Agent 以独立进程启动（<code>run-agent.sh</code>），带深度保护防止递归，失败时回退到底层脚本并明确告知。</span><span class="en">Sub-agents run as separate processes (<code>run-agent.sh</code>) with a depth guard against recursion; on failure the caller falls back to the underlying script and says so.</span></p>
   </section>
 
+  <section id="gate">
+    <h2><span class="num">05</span><span class="zh">动作审核（Action gate）</span><span class="en">Action gate</span></h2>
+    <p><span class="zh">Agent 的每次工具调用先经过一个 <code>preToolUse</code> hook：按策略文件以毫秒级判定风险等级并记录。分层依据是可逆性 × 影响范围，而不是动作类别——大部分动作只读，不该为它们付出 LLM 审核的代价。</span><span class="en">Every agent tool call first passes a <code>preToolUse</code> hook that classifies it against a policy file in milliseconds and logs the decision. Tiers follow reversibility × blast radius, not action type — most actions are read-only and shouldn't pay for an LLM review.</span></p>
+    <table>
+      <thead><tr><th><span class="zh">等级</span><span class="en">Tier</span></th><th><span class="zh">典型动作</span><span class="en">Typical actions</span></th><th><span class="zh">处理</span><span class="en">Handling</span></th></tr></thead>
+      <tbody>
+        <tr><td class="lv">DENY</td><td><span class="zh">改 gate / 策略 / agent 配置；删除允许范围外的路径</span><span class="en">Editing the gate, policy or agent config; deleting outside the allow-list</span></td><td><span class="zh">始终阻止，不可审批</span><span class="en">Always blocked, not approvable</span></td></tr>
+        <tr><td class="lv">L3</td><td><span class="zh">git push、破坏性 git、未识别为只读的 MCP 工具、给别人发邮件、无法解析的命令</span><span class="en">git push, destructive git, MCP tools not known read-only, mail to others, unparseable commands</span></td><td><span class="zh">阻止，用户在真终端 <code>kiro-gate approve &lt;id&gt;</code> 放行一次</span><span class="en">Blocked; the user runs <code>kiro-gate approve &lt;id&gt;</code> in a real terminal for a one-time pass</span></td></tr>
+        <tr><td class="lv">L1</td><td><span class="zh">自有路径内的写入、本地 commit、自有脚本、scratch 内删除</span><span class="en">Writes under own roots, local commits, own scripts, deletes inside scratch</span></td><td><span class="zh">放行 + 记录</span><span class="en">Allowed + logged</span></td></tr>
+        <tr><td class="lv">L0</td><td><span class="zh">只读：read / grep / git log、MCP 的 get_/search_/list_</span><span class="en">Read-only: read / grep / git log, MCP get_/search_/list_</span></td><td><span class="zh">放行 + 记录</span><span class="en">Allowed + logged</span></td></tr>
+        <tr><td class="lv">L2</td><td><span class="zh">其余未分类动作</span><span class="en">Everything else</span></td><td><span class="zh">按配置放行 + 记录，留给周审计</span><span class="en">Allowed per config + logged, left to the weekly audit</span></td></tr>
+      </tbody>
+    </table>
+    <div class="flow" aria-label="Rollout loop" style="margin-top:16px">
+      <span class="step"><span class="zh">shadow 观察</span><span class="en">Shadow (log only)</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">按新策略重放</span><span class="en">Replay on new policy</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">enforce</span><span class="en">Enforce</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">周审计 gate-audit</span><span class="en">Weekly gate-audit</span></span><span class="arrow">→</span>
+      <span class="step"><span class="zh">提案，用户确认</span><span class="en">Proposals, user confirms</span></span>
+    </div>
+    <p><span class="zh">审计只提案、从不改策略；L3 永不自动降级。kiro-cli 在 hook 崩溃或超时时会放行，所以 hook 自己 fail-closed：enforce 下任何内部错误都按阻止处理。</span><span class="en">The audit only proposes and never edits the policy; L3 is never auto-downgraded. kiro-cli lets a call through if the hook crashes or times out, so the hook fails closed itself: in enforce mode any internal error blocks.</span></p>
+    <p class="note"><span class="zh">定位：防止 agent 失误的护栏，不是安全沙箱。方法论见 <a href="https://github.com/ranbine/lab/blob/main/contexts/tips/thinking/progressive-authorization.md">progressive-authorization.md</a>。</span><span class="en">Scope: a guard-rail against agent mistakes, not a sandbox. Methodology: <a href="https://github.com/ranbine/lab/blob/main/contexts/tips/thinking/progressive-authorization.md">progressive-authorization.md</a>.</span></p>
+  </section>
+
   <section id="discipline">
-    <h2><span class="num">05</span><span class="zh">纪律框架</span><span class="en">Discipline framework</span></h2>
+    <h2><span class="num">06</span><span class="zh">纪律框架</span><span class="en">Discipline framework</span></h2>
     <p><span class="zh">同类错误出现两次就提炼成 pattern；pattern 毕业后进入三层纪律。每条规则都要挂来源和一次真实的翻车记录，没有实例的规则不收录。</span><span class="en">A mistake seen twice becomes a pattern; graduated patterns join a three-tier discipline. Every rule must cite its source and a real failure — no example, no rule.</span></p>
     <table>
       <thead><tr><th>Tier</th><th><span class="zh">何时扫</span><span class="en">When</span></th><th><span class="zh">示例</span><span class="en">Example</span></th></tr></thead>
@@ -164,23 +203,35 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="portable">
-    <h2><span class="num">06</span><span class="zh">可移植 &amp; 去敏感</span><span class="en">Portable &amp; leak-safe</span></h2>
+    <h2><span class="num">07</span><span class="zh">可移植 &amp; 去敏感</span><span class="en">Portable &amp; leak-safe</span></h2>
+    <p><span class="zh">同一套框架同时跑在私有实例和这个公开仓库里：框架文件逐字节一致，个人和领域内容全部放在被 git 忽略的 overlay 里。</span><span class="en">The same framework runs in a private install and in this public repo: framework files are byte-identical, and everything personal or domain-specific lives in gitignored overlays.</span></p>
     <div class="grid">
-      <div class="card"><h3><span class="zh">路径单一来源</span><span class="en">One path registry</span></h3><p><span class="zh">脚本不写死路径，全部从 <code>config/paths.env</code>（相对路径）解析；机器相关值只放在被忽略的 <code>local.env</code>。</span><span class="en">No hard-coded paths: everything resolves from <code>config/paths.env</code> (relative); machine values live only in an ignored <code>local.env</code>.</span></p></div>
+      <div class="card"><h3><span class="zh">个人信息封装</span><span class="en">Personal overlay</span></h3><p><span class="zh">身份、路径、时区、删除白名单放 <code>config/local.env</code>；额外标签、关键词放 <code>local.json</code>；私有 MCP 规则放 <code>gate-policy.local.json</code>；本地规则补充放 <code>contexts/local/</code>。</span><span class="en">Identity, paths, timezone, delete allow-lists in <code>config/local.env</code>; extra tags and keywords in <code>local.json</code>; private MCP rules in <code>gate-policy.local.json</code>; local rule additions under <code>contexts/local/</code>.</span></p></div>
+      <div class="card"><h3><span class="zh">共享核心</span><span class="en">Shared core</span></h3><p><span class="zh"><code>shared-files.txt</code> 列出必须逐字节一致的框架文件；<code>sync-shared.sh</code> 只拷清单内文件，受保护文件不同就整体中止；<code>kiro-doctor</code> 报告漂移。</span><span class="en"><code>shared-files.txt</code> lists framework files that must stay byte-identical; <code>sync-shared.sh</code> copies only listed files and aborts entirely if a protected file differs; <code>kiro-doctor</code> reports drift.</span></p></div>
       <div class="card"><h3><span class="zh">泄露防护</span><span class="en">Leak guard</span></h3><p><span class="zh">pre-commit / pre-push 扫描绝对路径、邮箱、密钥；私有敏感词表放在仓库外，敏感词本身永不发布。</span><span class="en">pre-commit / pre-push scan for absolute paths, emails and keys; a private denylist lives outside the repo so the words themselves are never published.</span></p></div>
     </div>
-<pre><code># config/paths.env
-KIRO_RULES=contexts/rules
-KIRO_HISTORY=history
-KIRO_DOCS=docs
+<pre><code># config/paths.env                   # config/local.env (gitignored)
+KIRO_RULES=contexts/rules            KIRO_TZ=Europe/Stockholm
+KIRO_HISTORY=history                 KIRO_SELF_EMAILS=&lt;your-email&gt;
 
 # shell                              # python
-. bin/lib/paths.sh                   from kiro_paths import P
-ls "$KIRO_RULES"                     P["KIRO_RULES"].glob("*.md")</code></pre>
+. bin/lib/paths.sh                   from kiro_paths import P, local_list
+ls "$KIRO_RULES"                     tags = local_list("summary_tags", list)</code></pre>
+  </section>
+
+  <section id="quickstart">
+    <h2><span class="num">08</span><span class="zh">快速开始</span><span class="en">Quick start</span></h2>
+    <p><span class="zh">需要 kiro-cli 和 Python 3。源码：<a href="https://github.com/ranbine/lab">github.com/ranbine/lab</a>。</span><span class="en">Requires kiro-cli and Python 3. Source: <a href="https://github.com/ranbine/lab">github.com/ranbine/lab</a>.</span></p>
+<pre><code>git clone https://github.com/ranbine/lab.git kiro && cd kiro
+cp config/local.env.example config/local.env   # name / email / timezone
+./install.sh --hooks                           # render agents, enable git hooks
+./install.sh --install                         # copy into ~/.kiro/agents
+python3 bin/gate-install.py install            # optional: action gate (starts in shadow)
+kiro-cli chat --agent kiro-lab</code></pre>
   </section>
 
   <section id="samples">
-    <h2><span class="num">07</span><span class="zh">示例报告</span><span class="en">Sample report</span></h2>
+    <h2><span class="num">09</span><span class="zh">示例报告</span><span class="en">Sample report</span></h2>
     <p><span class="zh">由 html-generator 套用日报模板生成，数据为虚构示例。</span><span class="en">Generated by html-generator from the daily template; data is fictional.</span></p>
     <a class="cta" href="samples/daily-report.html"><span class="zh">查看示例日报 →</span><span class="en">View sample daily report →</span></a>
   </section>
