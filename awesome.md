@@ -12,6 +12,8 @@ Format: `[owner/repo](url)` — one-line summary · language · ★stars (at tim
 
 ## AI / Video
 
+- [openfilm/openfilm](https://github.com/openfilm/openfilm) — 开源 AI 视频 agent：让 Codex / Claude Code 等 coding agent 用 `film.html` 写片子（每个镜头是一个 `frame(t)` 网页，可用 three.js/canvas/GSAP 等），再在本地浏览器编辑器 Studio 里手动或对话修改；定位为不依赖 Remotion/HyperFrames 这类框架的替代方案。`npx skills add openfilm/openfilm`，也有 macOS/Windows 桌面版 · Node ≥22.2 + ffmpeg · ★3k · 2026-10-27
+
 - [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) — "Write HTML. Render video. Built for agents." HeyGen 开源的 HTML/CSS + 动画 → 确定性 MP4 渲染框架；有 CLI、给 AI coding agent 用的 skills（`npx hyperframes skills update`，带 Claude Code 插件），也有 Studio/Playground · npm / Node ≥22 · Apache-2.0 · ★73k · 2026-10-27
 
 ## Android TV
