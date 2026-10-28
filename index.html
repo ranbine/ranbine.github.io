@@ -59,6 +59,8 @@ tr:last-child td{border-bottom:0}
 .lv{font-family:"Roboto Mono",monospace;font-weight:500;white-space:nowrap}
 .note{font-size:14px;border-left:3px solid var(--kb-accent);background:var(--kb-surface);padding:10px 14px;border-radius:0 8px 8px 0;margin-top:16px}
 footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;color:var(--kb-text-m);text-align:center}
+.demo-video{margin:32px 0 0}
+.demo-video video{display:block;width:100%;border:1px solid var(--kb-border);border-radius:12px;background:#000}
 @media (max-width:600px){h1{font-size:30px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
@@ -89,6 +91,13 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
       <a class="cta" href="https://github.com/ranbine/lab"><span class="zh">GitHub 源码 →</span><span class="en">Source on GitHub →</span></a>
       <a class="cta ghost" href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
     </div>
+    <figure class="demo-video">
+      <video controls autoplay muted loop playsinline preload="metadata" aria-label="Kiro Lab demo (10s, no audio)">
+        <source src="assets/kirolab-demo.webm" type="video/webm">
+        <source src="assets/kirolab-demo.mp4" type="video/mp4">
+        <a href="assets/kirolab-demo.mp4">Download the demo video</a>
+      </video>
+    </figure>
   </header>
 
   <nav class="toc" aria-label="Sections">
