@@ -26,6 +26,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--kb-accent);outline-
 .skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;padding:6px 10px;z-index:200}
 #progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--kb-accent);z-index:100}
 .kiro-nav .nav-controls button[aria-pressed="true"]{background:var(--kb-accent);color:#fff;border-color:var(--kb-accent)}
+/* Frosted-glass nav, same values as the Kiro Lab portal */
+.kiro-nav{background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(219,224,229,.6)}
 .wrap{max-width:900px;margin:0 auto;padding:40px 24px 48px}
 /* Nav links (same placement as Kiro Lab portal) */
 .kiro-nav .nav-links{display:flex;gap:18px;align-items:center;margin-left:auto;margin-right:16px;font-size:14px}
