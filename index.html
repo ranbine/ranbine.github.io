@@ -180,6 +180,7 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
 
   <nav class="toc" aria-label="Sections">
     <a href="#why"><span class="zh">动机</span><span class="en">Why</span></a>
+    <a href="#pure"><span class="zh">Lab 与 pure</span><span class="en">Lab vs pure</span></a>
     <a href="#arch"><span class="zh">架构</span><span class="en">Architecture</span></a>
     <a href="#startup"><span class="zh">启动流程</span><span class="en">Startup</span></a>
     <a href="#agents"><span class="zh">子 Agent</span><span class="en">Sub-agents</span></a>
@@ -199,8 +200,24 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
     </div>
   </section>
 
+  <section id="pure">
+    <h2><span class="num">02</span><span class="zh">Kiro Lab 与 kiro-pure</span><span class="en">Kiro Lab vs kiro-pure</span></h2>
+    <p><span class="zh">本站介绍的是 Kiro Lab；你能 clone 和运行的是 kiro-pure。两者共用同一套框架核心，区别只在"框架之外装了什么"。</span><span class="en">This site describes Kiro Lab; what you can clone and run is kiro-pure. Both share one framework core — they differ only in what sits on top of it.</span></p>
+    <table>
+      <thead><tr><th></th><th>Kiro Lab</th><th>kiro-pure</th></tr></thead>
+      <tbody>
+        <tr><td><span class="zh">是什么</span><span class="en">What</span></td><td><span class="zh">作者的私有实例，每天在用</span><span class="en">The author's private install, used daily</span></td><td><span class="zh">从 Lab 抽出的通用框架</span><span class="en">The generic framework extracted from Lab</span></td></tr>
+        <tr><td><span class="zh">内容</span><span class="en">Contents</span></td><td><span class="zh">框架 + 领域规则、领域脚本、真实报告</span><span class="en">Framework + domain rules, domain scripts, real reports</span></td><td><span class="zh">只有框架；示例报告用虚构数据</span><span class="en">Framework only; demo reports use fictional data</span></td></tr>
+        <tr><td><span class="zh">在哪</span><span class="en">Where</span></td><td><span class="zh">公司内网，需登录</span><span class="en">Company network, sign-in required</span></td><td><span class="zh">本站 <a href="examples/">示例</a> + <a href="#quickstart">源码仓库</a></span><span class="en">This site's <a href="examples/">examples</a> + <a href="#quickstart">source repo</a></span></td></tr>
+        <tr><td><span class="zh">关系</span><span class="en">Relation</span></td><td><span class="zh">下游：共享文件从 pure 拉取</span><span class="en">Downstream: pulls shared files from pure</span></td><td><span class="zh">上游：共享核心逐字节一致（<code>shared-files.txt</code>）</span><span class="en">Upstream: shared core kept byte-identical (<code>shared-files.txt</code>)</span></td></tr>
+        <tr><td><span class="zh">个人 / 领域内容</span><span class="en">Personal / domain</span></td><td><span class="zh">放在 gitignore 的 overlay 里</span><span class="en">Lives in gitignored overlays</span></td><td><span class="zh">不包含，由使用者自己填 overlay</span><span class="en">None — you fill your own overlay</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note"><span class="zh">一句话：Lab 证明这套方法在真实工作里跑得通，pure 让你能把它装到自己的领域。细节见 <a href="#portable">08 可移植</a>。</span><span class="en">In short: Lab proves the method works on real work; pure lets you install it in your own domain. Details in <a href="#portable">08 Portability</a>.</span></p>
+  </section>
+
   <section id="arch">
-    <h2><span class="num">02</span><span class="zh">架构</span><span class="en">Architecture</span></h2>
+    <h2><span class="num">03</span><span class="zh">架构</span><span class="en">Architecture</span></h2>
     <p><span class="zh">四层：配置 → 规则 → 脚本 → Agent。规则是唯一真相，脚本只负责确定性的数据收集，Agent 负责判断。</span><span class="en">Four layers: config → rules → scripts → agents. Rules are the source of truth, scripts do deterministic collection, agents do judgment.</span></p>
 <pre><code>config/paths.env          single source of truth for every path (repo-relative)
 config/local*.json|env    your identity / domain extensions (gitignored)
@@ -239,7 +256,7 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="startup">
-    <h2><span class="num">03</span><span class="zh">启动流程</span><span class="en">Startup flow</span></h2>
+    <h2><span class="num">04</span><span class="zh">启动流程</span><span class="en">Startup flow</span></h2>
     <p><span class="zh">会话一开始，hook 先跑完所有确定性检查，只把一段摘要注入上下文；Agent 按固定优先级逐项处理，一次只问一个问题。</span><span class="en">On session start a hook runs every deterministic check and injects only a short digest; the agent acts on it in a fixed priority order, one question at a time.</span></p>
     <div class="flow" aria-label="Startup priority">
       <span class="step"><span class="zh">触发词</span><span class="en">Trigger words</span></span><span class="arrow">→</span>
@@ -258,7 +275,7 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="agents">
-    <h2><span class="num">04</span><span class="zh">子 Agent 分工</span><span class="en">Sub-agents</span></h2>
+    <h2><span class="num">05</span><span class="zh">子 Agent 分工</span><span class="en">Sub-agents</span></h2>
     <div class="grid">
       <div class="card"><h3>html-generator</h3><p><span class="zh">按 style-registry 选模板、填数据、出预览。唯一的报告出口。</span><span class="en">Picks a template from the style registry, fills it, returns a preview. The single dispatch point for reports.</span></p><span class="tag">templates/</span></div>
       <div class="card"><h3>reviewer</h3><p><span class="zh">质量门：脚本给读数（链接、双语、结构、体积），Agent 给结论 PUBLISH-OK / BLOCK / NEEDS-HUMAN。只诊断不修改。</span><span class="en">Quality gate: the script gives readings (links, bilingual, structure, size), the agent gives the verdict PUBLISH-OK / BLOCK / NEEDS-HUMAN. Diagnoses only.</span></p><span class="tag">review-artifact.py</span></div>
@@ -268,7 +285,7 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="gate">
-    <h2><span class="num">05</span><span class="zh">动作审核（Action gate）</span><span class="en">Action gate</span></h2>
+    <h2><span class="num">06</span><span class="zh">动作审核（Action gate）</span><span class="en">Action gate</span></h2>
     <p><span class="zh">Agent 的每次工具调用先经过一个 <code>preToolUse</code> hook：按策略文件以毫秒级判定风险等级并记录。分层依据是可逆性 × 影响范围，而不是动作类别——大部分动作只读，不该为它们付出 LLM 审核的代价。</span><span class="en">Every agent tool call first passes a <code>preToolUse</code> hook that classifies it against a policy file in milliseconds and logs the decision. Tiers follow reversibility × blast radius, not action type — most actions are read-only and shouldn't pay for an LLM review.</span></p>
     <table>
       <thead><tr><th><span class="zh">等级</span><span class="en">Tier</span></th><th><span class="zh">典型动作</span><span class="en">Typical actions</span></th><th><span class="zh">处理</span><span class="en">Handling</span></th></tr></thead>
@@ -292,7 +309,7 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="discipline">
-    <h2><span class="num">06</span><span class="zh">纪律框架</span><span class="en">Discipline framework</span></h2>
+    <h2><span class="num">07</span><span class="zh">纪律框架</span><span class="en">Discipline framework</span></h2>
     <p><span class="zh">同类错误出现两次就提炼成 pattern；pattern 毕业后进入三层纪律。每条规则都要挂来源和一次真实的翻车记录，没有实例的规则不收录。</span><span class="en">A mistake seen twice becomes a pattern; graduated patterns join a three-tier discipline. Every rule must cite its source and a real failure — no example, no rule.</span></p>
     <table>
       <thead><tr><th>Tier</th><th><span class="zh">何时扫</span><span class="en">When</span></th><th><span class="zh">示例</span><span class="en">Example</span></th></tr></thead>
@@ -305,7 +322,7 @@ decisions/                ADR log: decision · alternatives · reason · revisit
   </section>
 
   <section id="portable">
-    <h2><span class="num">07</span><span class="zh">可移植 &amp; 去敏感</span><span class="en">Portable &amp; leak-safe</span></h2>
+    <h2><span class="num">08</span><span class="zh">可移植 &amp; 去敏感</span><span class="en">Portable &amp; leak-safe</span></h2>
     <p><span class="zh">同一套框架同时跑在私有实例和这个公开仓库里：框架文件逐字节一致，个人和领域内容全部放在被 git 忽略的 overlay 里。</span><span class="en">The same framework runs in a private install and in this public repo: framework files are byte-identical, and everything personal or domain-specific lives in gitignored overlays.</span></p>
     <div class="grid">
       <div class="card"><h3><span class="zh">个人信息封装</span><span class="en">Personal overlay</span></h3><p><span class="zh">身份、路径、时区、删除白名单放 <code>config/local.env</code>；额外标签、关键词放 <code>local.json</code>；私有 MCP 规则放 <code>gate-policy.local.json</code>；本地规则补充放 <code>contexts/local/</code>。</span><span class="en">Identity, paths, timezone, delete allow-lists in <code>config/local.env</code>; extra tags and keywords in <code>local.json</code>; private MCP rules in <code>gate-policy.local.json</code>; local rule additions under <code>contexts/local/</code>.</span></p></div>
@@ -322,7 +339,7 @@ ls "$KIRO_RULES"                     tags = local_list("summary_tags", list)</co
   </section>
 
   <section id="quickstart">
-    <h2><span class="num">08</span><span class="zh">快速开始</span><span class="en">Quick start</span></h2>
+    <h2><span class="num">09</span><span class="zh">快速开始</span><span class="en">Quick start</span></h2>
     <p><span class="zh">需要 kiro-cli 和 Python 3。源码：<a href="https://github.com/ranbine/lab">github.com/ranbine/lab</a>。</span><span class="en">Requires kiro-cli and Python 3. Source: <a href="https://github.com/ranbine/lab">github.com/ranbine/lab</a>.</span></p>
 <pre><code>git clone https://github.com/ranbine/lab.git kiro && cd kiro
 cp config/local.env.example config/local.env   # name / email / timezone
@@ -333,7 +350,7 @@ kiro-cli chat --agent kiro-lab</code></pre>
   </section>
 
   <section id="samples">
-    <h2><span class="num">09</span><span class="zh">示例</span><span class="en">Examples</span></h2>
+    <h2><span class="num">10</span><span class="zh">示例</span><span class="en">Examples</span></h2>
     <p><span class="zh">展示页与演示报告均为脱敏 / 虚构数据，可直接在浏览器打开。</span><span class="en">Showcase pages and demo reports — sanitised or fictional data, open directly in a browser.</span></p>
     <div class="grid" style="margin-bottom:16px">
       <a class="card" href="examples/showcase/journey-0-to-1.html"><h3><span class="zh">从 0 到 1</span><span class="en">Journey 0 → 1</span></h3><p><span class="zh">这套系统是怎么一步步长出来的。</span><span class="en">How the system grew, step by step.</span></p><span class="tag">showcase</span></a>
