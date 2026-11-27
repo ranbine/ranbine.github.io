@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kiro-pure — Examples</title>
+<!--
+  Curated showcase pages ported from the author's kiro-lab instance (sanitised).
+  Not the runtime portal: generated reports go to docs/ (KIRO_DOCS, gitignored).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="kiro-base.css">
+<style>
+:root {
+  /* Index/Nav palette */
+  --kb-bg: #f8f9fa; --kb-surface: #fff; --kb-text: #1d2630;
+  --kb-text-s: #3e4853; --kb-text-m: #5b6b79; --kb-accent: #4099ff; --kb-border: #dbe0e5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Roboto, system-ui, sans-serif; background: var(--kb-bg); color: var(--kb-text); }
+main { max-width: 900px; margin: 0 auto; padding: 72px 16px 48px; }
+.hero { background: #1d2630; color: #fff; border-radius: 14px; padding: 28px 24px; }
+.hero h1 { margin: 0 0 6px; font-size: 1.5rem; }
+.hero p { margin: 0; color: rgba(255,255,255,.75); font-size: .9rem; line-height: 1.6; }
+.section-title { font-size: 1rem; font-weight: 600; margin: 36px 0 12px; color: var(--kb-text-s); }
+.posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.post-card { display: block; background: var(--kb-surface); border: 1px solid var(--kb-border); border-radius: 12px;
+  padding: 16px; text-decoration: none; color: inherit; transition: box-shadow .2s, transform .2s; }
+.post-card:hover, .post-card:focus-visible { box-shadow: 0 4px 14px rgba(4,26,55,.08); transform: translateY(-2px); }
+.post-card:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
+.post-card h3 { margin: 8px 0 6px; font-size: .95rem; }
+.post-card p { margin: 0; font-size: .8rem; color: var(--kb-text-m); line-height: 1.5; }
+.tag { display: inline-block; font-size: .65rem; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+.tag-story { background: #e8d5f5; color: #3b1f6e; }
+.tag-design { background: #d6edff; color: #1d4a7a; }
+.tag-note { background: #e6ecf2; color: #3e4853; }
+.lang { float: right; font-size: .65rem; color: var(--kb-text-m); }
+footer { margin-top: 40px; font-size: .75rem; color: var(--kb-text-m); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .post-card { transition: none; } .post-card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<nav class="kiro-nav">
+  <a href="index.html" class="brand"><i class="fas fa-bolt" aria-hidden="true"></i> kiro-pure</a>
+  <a href="../" class="back-link" data-zh="← 返回 Kiro Lab" data-en="← Back to Kiro Lab">← Back to Kiro Lab</a>
+  <div class="nav-controls">
+    <button type="button" onclick="switchLang('zh-CN')" id="btnZh">中文</button>
+    <button type="button" class="active" onclick="switchLang('en')" id="btnEn">EN</button>
+  </div>
+</nav>
+<main>
+<section class="hero">
+  <h1 data-zh="kiro-pure 示例" data-en="kiro-pure Examples">kiro-pure Examples</h1>
+  <p data-zh="从作者的 Kiro Lab 实例整理出的展示页：成长历程、权限设计和 agent 约定。已脱敏，可直接用浏览器打开。"
+     data-en="Showcase pages curated from the author's Kiro Lab instance: how it grew, permission design and agent contracts. Sanitised; open directly in a browser.">Showcase pages curated from the author's Kiro Lab instance: how it grew, permission design and agent contracts. Sanitised; open directly in a browser.</p>
+</section>
+
+<h2 class="section-title" data-zh="成长历程" data-en="Journey">Journey</h2>
+<div class="posts-grid">
+  <a class="post-card" href="showcase/journey-0-to-1.html">
+    <span class="tag tag-story" data-zh="历程" data-en="Story">Story</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="从 0 到 1：Kiro Lab 是怎么长出来的" data-en="From 0 to 1: how Kiro Lab grew">From 0 to 1: how Kiro Lab grew</h3>
+    <p data-zh="从手工分析回归结果，到规则、脚本、sub-agent 和报告体系的演进过程。配合 JOURNEY.md 阅读。"
+       data-en="From manual regression triage to rules, scripts, sub-agents and reports. Companion to JOURNEY.md.">From manual regression triage to rules, scripts, sub-agents and reports. Companion to JOURNEY.md.</p>
+  </a>
+</div>
+
+<h2 class="section-title" data-zh="设计" data-en="Design">Design</h2>
+<div class="posts-grid">
+  <a class="post-card" href="showcase/progressive-authorization.html">
+    <span class="tag tag-design" data-zh="设计" data-en="Design">Design</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="渐进授权" data-en="Progressive Authorization">Progressive Authorization</h3>
+    <p data-zh="L0–L3 / DENY 分级：读放行、自有写放行、高风险审批、红线拒绝。"
+       data-en="L0–L3 / DENY levels: reads pass, own writes pass, risky actions need approval, red lines are refused.">L0–L3 / DENY levels: reads pass, own writes pass, risky actions need approval, red lines are refused.</p>
+  </a>
+  <a class="post-card" href="tools/action-gate.html">
+    <span class="tag tag-design" data-zh="设计" data-en="Design">Design</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="权限机制：三道关" data-en="Permissions: Three Checkpoints">Permissions: Three Checkpoints</h3>
+    <p data-zh="bin/action-gate.py 原理与真实拦截案例回放。"
+       data-en="How bin/action-gate.py works, with replays of real intercepted calls.">How bin/action-gate.py works, with replays of real intercepted calls.</p>
+  </a>
+  <a class="post-card" href="tools/agent-io-contract.html">
+    <span class="tag tag-design" data-zh="设计" data-en="Design">Design</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="把 Agent 变成规矩的 Unix 零件" data-en="Agent as a Unix Component">Agent as a Unix Component</h3>
+    <p data-zh="bin/run-agent.sh 的 stdout/stderr 分流与退出码约定。"
+       data-en="bin/run-agent.sh stream split and exit-code contract.">bin/run-agent.sh stream split and exit-code contract.</p>
+  </a>
+  <a class="post-card" href="event-agents/">
+    <span class="tag tag-design" data-zh="设计" data-en="Design">Design</span><span class="lang">EN</span>
+    <h3 data-zh="事件驱动多 Agent" data-en="Event-Driven Agents">Event-Driven Agents</h3>
+    <p data-zh="bin/event-bus.py：agent 只订阅 topic、互不调用；fan-out / fan-in / trace。mock demo：bash examples/event-agents/run-demo.sh"
+       data-en="bin/event-bus.py: agents subscribe to topics and never call each other; fan-out / fan-in / trace. Mock demo: bash examples/event-agents/run-demo.sh">bin/event-bus.py: agents subscribe to topics and never call each other; fan-out / fan-in / trace. Mock demo: bash examples/event-agents/run-demo.sh</p>
+  </a>
+</div>
+
+<h2 class="section-title" data-zh="演示报告（虚构数据）" data-en="Demo Reports (fictional data)">Demo Reports (fictional data)</h2>
+<div class="posts-grid">
+  <a class="post-card" href="reports/dashboard/upgrade-break-demo.html">
+    <span class="tag tag-design" data-zh="Dashboard" data-en="Dashboard">Dashboard</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="升级 Break 看板" data-en="Upgrade Break Dashboard">Upgrade Break Dashboard</h3>
+    <p data-zh="6 个视图：总览、图表、跨 build 热力图、单 build、TR 跟踪、TR 库（搜索/筛选）。"
+       data-en="Six views: overview, charts, cross-build heatmap, per build, TR tracker, searchable TR database.">Six views: overview, charts, cross-build heatmap, per build, TR tracker, searchable TR database.</p>
+  </a>
+  <a class="post-card" href="reports/scope/scope-check-demo.html">
+    <span class="tag tag-design" data-zh="Dashboard" data-en="Dashboard">Dashboard</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="Scope 执行状态检查" data-en="Scope Execution Status Check">Scope Execution Status Check</h3>
+    <p data-zh="通过率环图、按分组筛选排序、失败用例与 master 对比判定是否回归。"
+       data-en="Pass-rate donut, per-group filter and sort, failed cases compared with master to flag regressions.">Pass-rate donut, per-group filter and sort, failed cases compared with master to flag regressions.</p>
+  </a>
+  <a class="post-card" href="reports/insight/insight-trend-demo.html">
+    <span class="tag tag-design" data-zh="洞察" data-en="Insight">Insight</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="洞察趋势 W43–W48" data-en="Insight Trend W43–W48">Insight Trend W43–W48</h3>
+    <p data-zh="Chart.js 摩擦点周趋势、已解决/待处理卡片、模式与行动项。"
+       data-en="Chart.js weekly friction trend, resolved/open cards, patterns and action items.">Chart.js weekly friction trend, resolved/open cards, patterns and action items.</p>
+  </a>
+  <a class="post-card" href="reports/daily/daily-report-2026-11-24.html">
+    <span class="tag tag-design" data-zh="日报" data-en="Daily">Daily</span><span class="lang">中文 / EN</span>
+    <h3 data-zh="日报 2026-11-24" data-en="Daily Report 2026-11-24">Daily Report 2026-11-24</h3>
+    <p data-zh="bin/generate-daily-report.py 渲染的日报：按主题分组，TOC 高亮。"
+       data-en="Rendered by bin/generate-daily-report.py: grouped by topic, TOC highlight.">Rendered by bin/generate-daily-report.py: grouped by topic, TOC highlight.</p>
+  </a>
+</div>
+<p style="font-size:.75rem;color:var(--kb-text-m);margin-top:10px" data-zh="重新生成：<code>python3 examples/build-demo.py</code>（数据在 <code>examples/demo-data/</code>）"
+   data-en="Rebuild: <code>python3 examples/build-demo.py</code> (data in <code>examples/demo-data/</code>)">Rebuild: <code>python3 examples/build-demo.py</code> (data in <code>examples/demo-data/</code>)</p>
+
+<h2 class="section-title" data-zh="技术笔记" data-en="Tech Notes">Tech Notes</h2>
+<div class="posts-grid">
+  <a class="post-card" href="tech-notes/kiro-mechanisms-explained.html">
+    <span class="tag tag-note" data-zh="笔记" data-en="Note">Note</span><span class="lang">中文 + EN script</span>
+    <h3 data-zh="Kiro 核心机制 · 通俗理解手册" data-en="Kiro Core Mechanisms Explained">Kiro Core Mechanisms Explained</h3>
+    <p data-zh="分层分析 + 反偏见交接等机制，每个分三层：大白话 → 中文介绍 → 英语说明稿。"
+       data-en="Layered analysis, anti-bias handover and more, each in three layers: plain words, Chinese intro, English talk script.">Layered analysis, anti-bias handover and more, each in three layers: plain words, Chinese intro, English talk script.</p>
+  </a>
+</div>
+
+<footer data-zh="生成于 2026-11-25 · kiro-pure" data-en="Generated 2026-11-25 · kiro-pure">Generated 2026-11-25 · kiro-pure</footer>
+</main>
+<script>
+function switchLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.nav-controls button').forEach(b => b.classList.remove('active'));
+  document.getElementById(lang === 'zh-CN' ? 'btnZh' : 'btnEn').classList.add('active');
+  const isZh = lang === 'zh-CN';
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    el.innerHTML = isZh ? el.getAttribute('data-zh') : el.getAttribute('data-en');
+  });
+}
+switchLang('en');
+</script>
+</body>
+</html>

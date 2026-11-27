@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kiro Lab — Personal AI Workflow System</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="description" content="A rule-driven personal workflow framework for an AI coding agent: startup digest, discipline patterns, sub-agents, quality gates and bilingual HTML reports.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
@@ -23,13 +26,31 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--kb-accent);outline-
 .skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:#fff;padding:6px 10px;z-index:200}
 #progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--kb-accent);z-index:100}
 .kiro-nav .nav-controls button[aria-pressed="true"]{background:var(--kb-accent);color:#fff;border-color:var(--kb-accent)}
-.wrap{max-width:900px;margin:0 auto;padding:48px 24px 48px}
-header.hero{text-align:center;margin-bottom:48px}
-.eyebrow{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--kb-accent);font-weight:500}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px 48px}
+/* Nav links (same placement as Kiro Lab portal) */
+.kiro-nav .nav-links{display:flex;gap:18px;align-items:center;margin-left:auto;margin-right:16px;font-size:14px}
+.kiro-nav .nav-links a{color:var(--kb-text-s);font-weight:500}
+.kiro-nav .nav-links a:hover{color:var(--kb-accent);text-decoration:none}
+/* Hero: animated gradient + particles, ported from the Kiro Lab portal */
+@keyframes gradientFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translate(0,0)}25%{transform:translate(10px,-20px)}50%{transform:translate(-10px,-10px)}75%{transform:translate(5px,-30px)}}
+header.hero{background:linear-gradient(135deg,#1d2630,#2d7cd6,#4099ff,#673ab7,#1d2630);background-size:300% 300%;animation:gradientFlow 12s ease infinite;padding:80px 24px 44px;text-align:center;position:relative;overflow:hidden;color:#fff}
+header.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(46,216,182,.1),transparent 50%);pointer-events:none}
+.hero-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.hero-particles span{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);animation:float linear infinite}
+.hero-inner{position:relative;max-width:900px;margin:0 auto}
+.hero-inner>*{animation:fadeSlideUp .8s cubic-bezier(.22,1,.36,1) both}
+.hero-inner .lead{animation-delay:.2s}.hero-inner .pills{animation-delay:.35s}.hero-inner .hero-cta{animation-delay:.5s}
+.eyebrow{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75);font-weight:500}
 h1{font-size:40px;margin:8px 0 12px;line-height:1.2}
-.lead{font-size:18px;color:var(--kb-text-s);max-width:680px;margin:0 auto}
+header.hero h1{color:#fff;letter-spacing:-.02em}
+.lead{font-size:18px;color:rgba(255,255,255,.8);max-width:680px;margin:0 auto}
 .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
-.pill{font-size:12px;border:1px solid var(--kb-border);background:var(--kb-surface);border-radius:999px;padding:4px 12px;color:var(--kb-text-m)}
+.pill{font-size:12px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);border-radius:999px;padding:4px 12px;color:#fff}
+header.hero .cta{background:#fff;color:#1d2630}
+header.hero .cta.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.7)}
+header.hero a:focus-visible{outline-color:#fff}
 nav.toc{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;border-top:1px solid var(--kb-border);border-bottom:1px solid var(--kb-border);padding:12px 0;margin-bottom:40px;font-size:14px}
 nav.toc a{color:var(--kb-text-m)}nav.toc a.active{color:var(--kb-accent);font-weight:500}
 section{margin-bottom:56px;scroll-margin-top:24px}
@@ -38,6 +59,7 @@ h2 .num{font-family:"Roboto Mono",monospace;font-size:14px;color:var(--kb-accent
 p{color:var(--kb-text-s)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
 .card{background:var(--kb-surface);border:1px solid var(--kb-border);border-radius:12px;padding:18px 20px}
+a.card{display:block;color:inherit;transition:border-color .2s,transform .2s}a.card:hover{text-decoration:none;border-color:var(--kb-accent);transform:translateY(-2px)}
 .card h3{margin:0 0 6px;font-size:16px}
 .card p{margin:0;font-size:14px}
 .tag{display:inline-block;font-size:11px;font-family:"Roboto Mono",monospace;background:var(--kb-code);border-radius:4px;padding:1px 6px;margin-top:10px;color:var(--kb-text-m)}
@@ -62,7 +84,8 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
 .demo-video{margin:32px 0 0}
 .demo-video video{display:block;width:100%;border:1px solid var(--kb-border);border-radius:12px;background:#000}
 @media (max-width:600px){h1{font-size:30px}}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media (max-width:700px){.kiro-nav .nav-links{gap:12px;font-size:13px}.kiro-nav .nav-links .opt{display:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}header.hero{animation:none;background-size:100% 100%}.hero-particles span,.hero-inner>*{animation:none}}
 </style>
 </head>
 <body>
@@ -70,14 +93,30 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
 <div id="progress" aria-hidden="true"></div>
 <nav class="kiro-nav" aria-label="Site">
   <a href="./" class="brand">⚡ Kiro Lab</a>
+  <div class="nav-links">
+    <a href="examples/"><span class="zh">示例</span><span class="en">Examples</span></a>
+    <a href="examples/reports/dashboard/upgrade-break-demo.html" class="opt"><span class="zh">看板演示</span><span class="en">Dashboard demo</span></a>
+    <a href="examples/showcase/journey-0-to-1.html" class="opt"><span class="zh">成长历程</span><span class="en">Journey</span></a>
+    <a href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
+  </div>
   <div class="nav-controls" role="group" aria-label="Language">
     <button id="bZh" type="button" aria-pressed="true" onclick="setLang('zh-CN')">中文</button>
     <button id="bEn" type="button" aria-pressed="false" onclick="setLang('en')">EN</button>
   </div>
 </nav>
 
-<main class="wrap" id="main">
-  <header class="hero">
+<header class="hero">
+  <div class="hero-particles" aria-hidden="true">
+    <span style="width:6px;height:6px;top:20%;left:10%;animation-duration:6s"></span>
+    <span style="width:4px;height:4px;top:60%;left:20%;animation-duration:8s;animation-delay:1s"></span>
+    <span style="width:8px;height:8px;top:30%;left:75%;animation-duration:7s;animation-delay:2s"></span>
+    <span style="width:5px;height:5px;top:70%;left:85%;animation-duration:9s;animation-delay:.5s"></span>
+    <span style="width:3px;height:3px;top:40%;left:50%;animation-duration:5s;animation-delay:3s"></span>
+    <span style="width:7px;height:7px;top:80%;left:35%;animation-duration:10s;animation-delay:1.5s"></span>
+    <span style="width:4px;height:4px;top:15%;left:60%;animation-duration:6.5s;animation-delay:2.5s"></span>
+    <span style="width:6px;height:6px;top:50%;left:90%;animation-duration:8.5s;animation-delay:.8s"></span>
+  </div>
+  <div class="hero-inner">
     <div class="eyebrow">Kiro Lab</div>
     <h1><span class="zh">个人 AI 工作流系统</span><span class="en">A Personal AI Workflow System</span></h1>
     <p class="lead">
@@ -88,17 +127,20 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
       <span class="pill">kiro-cli</span><span class="pill">MCP</span><span class="pill">Lifecycle hooks</span><span class="pill">Python 3</span><span class="pill">Bash</span><span class="pill">Sub-agents</span><span class="pill">Action gate</span><span class="pill">Bilingual HTML</span>
     </div>
     <div class="hero-cta">
-      <a class="cta" href="https://github.com/ranbine/lab"><span class="zh">GitHub 源码 →</span><span class="en">Source on GitHub →</span></a>
-      <a class="cta ghost" href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
+      <a class="cta" href="examples/"><span class="zh">查看示例 →</span><span class="en">Browse examples →</span></a>
+      <a class="cta ghost" href="https://github.com/ranbine/lab"><span class="zh">GitHub 源码</span><span class="en">Source on GitHub</span></a>
     </div>
-    <figure class="demo-video">
+  </div>
+</header>
+
+<main class="wrap" id="main">
+    <figure class="demo-video" style="margin-top:0;margin-bottom:40px">
       <video controls autoplay muted loop playsinline preload="metadata" aria-label="Kiro Lab demo (10s, no audio)">
         <source src="assets/kirolab-demo.webm" type="video/webm">
         <source src="assets/kirolab-demo.mp4" type="video/mp4">
         <a href="assets/kirolab-demo.mp4">Download the demo video</a>
       </video>
     </figure>
-  </header>
 
   <nav class="toc" aria-label="Sections">
     <a href="#why"><span class="zh">动机</span><span class="en">Why</span></a>
@@ -109,7 +151,7 @@ footer{border-top:1px solid var(--kb-border);padding-top:20px;font-size:13px;col
     <a href="#discipline"><span class="zh">纪律框架</span><span class="en">Discipline</span></a>
     <a href="#portable"><span class="zh">可移植</span><span class="en">Portability</span></a>
     <a href="#quickstart"><span class="zh">快速开始</span><span class="en">Quick start</span></a>
-    <a href="#samples"><span class="zh">示例</span><span class="en">Samples</span></a>
+    <a href="#samples"><span class="zh">示例</span><span class="en">Examples</span></a>
   </nav>
 
   <section id="why">
@@ -255,9 +297,15 @@ kiro-cli chat --agent kiro-lab</code></pre>
   </section>
 
   <section id="samples">
-    <h2><span class="num">09</span><span class="zh">示例报告</span><span class="en">Sample report</span></h2>
-    <p><span class="zh">由 html-generator 套用日报模板生成，数据为虚构示例。</span><span class="en">Generated by html-generator from the daily template; data is fictional.</span></p>
-    <a class="cta" href="samples/daily-report.html"><span class="zh">查看示例日报 →</span><span class="en">View sample daily report →</span></a>
+    <h2><span class="num">09</span><span class="zh">示例</span><span class="en">Examples</span></h2>
+    <p><span class="zh">展示页与演示报告均为脱敏 / 虚构数据，可直接在浏览器打开。</span><span class="en">Showcase pages and demo reports — sanitised or fictional data, open directly in a browser.</span></p>
+    <div class="grid" style="margin-bottom:16px">
+      <a class="card" href="examples/showcase/journey-0-to-1.html"><h3><span class="zh">从 0 到 1</span><span class="en">Journey 0 → 1</span></h3><p><span class="zh">这套系统是怎么一步步长出来的。</span><span class="en">How the system grew, step by step.</span></p><span class="tag">showcase</span></a>
+      <a class="card" href="examples/tools/action-gate.html"><h3>Action gate</h3><p><span class="zh">工具调用分级审核的设计与上线。</span><span class="en">Tiered review of every tool call.</span></p><span class="tag">design</span></a>
+      <a class="card" href="examples/reports/dashboard/upgrade-break-demo.html"><h3><span class="zh">Upgrade Break 看板</span><span class="en">Upgrade Break dashboard</span></h3><p><span class="zh">6 个视图的交互式看板（虚构数据）。</span><span class="en">Six-view interactive dashboard (fictional data).</span></p><span class="tag">demo report</span></a>
+    </div>
+    <a class="cta" href="examples/"><span class="zh">全部示例 →</span><span class="en">All examples →</span></a>
+    <a class="cta ghost" href="samples/daily-report.html" style="margin-left:8px"><span class="zh">示例日报</span><span class="en">Sample daily report</span></a>
   </section>
 
   <footer>

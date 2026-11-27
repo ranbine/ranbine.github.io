@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent as a Unix Component — run-agent.sh stream-split demo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --ivory:#FAF9F5; --paper:#FFFFFF; --slate:#141413;
+  --clay:#D97757; --clay-d:#B85C3E; --clay-light:#F4E0D9;
+  --olive:#788C5D; --olive-light:#E8F0DE;
+  --amber:#B8860B; --amber-light:#FDF3D7;
+  --red:#C44B4B; --red-light:#FCE8E8;
+  --blue:#4B7BC4; --blue-light:#E3F2FD;
+  --g100:#F0EEE6; --g200:#E6E3DA; --g300:#D1CFC5; --g500:#87867F; --g700:#3D3D3A;
+  --serif:ui-serif,Georgia,"Times New Roman",Times,serif;
+  --sans:Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"Roboto Mono",ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+  --max-w:980px; --radius:8px;
+  --kb-bg:var(--ivory); --kb-surface:var(--paper); --kb-text:var(--slate);
+  --kb-text-s:var(--g700); --kb-text-m:var(--g500); --kb-accent:var(--clay); --kb-border:var(--g300);
+}
+[data-theme="dark"]{--ivory:#1a1a2e;--paper:#16213e;--slate:#e0e0e0;--g100:#1e1e3a;--g200:#2a2a4a;--g300:#3a3a5a;--g500:#a0a0a0;--g700:#c0c0c0;--clay-light:#3d2520;--olive-light:#1e2e1a;--amber-light:#2e2510;--red-light:#2e1a1a;--blue-light:#1a2535;}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.6;transition:background .2s,color .2s;}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--clay);z-index:9999;width:0%;transition:width .1s;}
+.wrap{max-width:var(--max-w);margin:0 auto;padding:0 32px 80px;}
+header{padding:48px 0 28px;border-bottom:1.5px solid var(--g300);margin-bottom:32px;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.eyebrow::before{content:"";width:24px;height:1.5px;background:var(--clay);}
+h1{font-family:var(--serif);font-weight:500;font-size:32px;line-height:1.2;margin:0 0 8px;}
+.intro{font-size:15px;color:var(--g700);margin-top:12px;max-width:680px;}
+section{margin-bottom:52px;}
+h2{font-family:var(--serif);font-size:22px;font-weight:500;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--g200);}
+h3{font-size:15px;font-weight:600;margin:18px 0 8px;}
+p{font-size:14px;color:var(--g700);}
+.lead{font-size:14px;color:var(--g700);margin-bottom:16px;}
+code{font-family:var(--mono);font-size:12px;background:var(--g100);padding:2px 6px;border-radius:3px;}
+.note{border-left:3px solid var(--clay);padding:10px 16px;background:#FDF8F5;border-radius:0 var(--radius) var(--radius) 0;font-size:13px;margin:14px 0;}
+
+/* analogy cards */
+.analogy{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+.acard{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;padding:18px 20px;}
+.acard.bad{border-color:var(--red);}
+.acard.good{border-color:var(--olive);}
+.acard .tag{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;}
+.acard.bad .tag{background:var(--red-light);color:var(--red);}
+.acard.good .tag{background:var(--olive-light);color:var(--olive);}
+.acard h4{margin:10px 0 6px;font-size:15px;}
+.acard .mono{font-family:var(--mono);font-size:11.5px;background:var(--g100);border-radius:6px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;color:var(--g700);line-height:1.5;}
+.acard .mono .narr{color:var(--g500);}
+.acard .mono .res{color:var(--olive);font-weight:600;}
+
+/* terminal demo */
+.demo{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;overflow:hidden;margin:18px 0;}
+.demo .bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--g100);border-bottom:1px solid var(--g300);}
+.demo .dot{width:11px;height:11px;border-radius:50%;}
+.demo .dot.r{background:#ff5f56;}.demo .dot.y{background:#ffbd2e;}.demo .dot.g{background:#27c93f;}
+.demo .bar .cmd{font-family:var(--mono);font-size:12px;color:var(--g700);margin-left:8px;}
+.demo .controls{margin-left:auto;display:flex;gap:8px;}
+.demo button{border:1.5px solid var(--g300);background:var(--paper);border-radius:7px;padding:5px 14px;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--g700);transition:all .15s;font-family:var(--sans);}
+.demo button:hover{background:var(--clay);color:#fff;border-color:var(--clay);}
+.pipes{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.pipe{min-height:230px;padding:16px;font-family:var(--mono);font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word;position:relative;}
+.pipe.stdout{background:#F6FAF2;border-right:1px solid var(--g300);}
+.pipe.stderr{background:#FBF9F3;}
+.pipe .lbl{position:sticky;top:0;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.pipe.stdout .lbl{color:var(--olive);}
+.pipe.stderr .lbl{color:var(--g500);}
+.pipe .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--g500);font-size:11px;}
+.line{opacity:0;transform:translateY(4px);animation:none;}
+.line.show{opacity:1;transform:translateY(0);transition:opacity .25s,transform .25s;}
+.line.tool{color:var(--g500);}
+.line.narr{color:var(--g500);font-style:italic;}
+.line.result{color:var(--olive);font-weight:600;background:var(--olive-light);border-radius:4px;padding:2px 6px;display:inline-block;}
+.line.warn{color:var(--amber);}
+.caret{display:inline-block;width:7px;height:14px;background:var(--clay);vertical-align:middle;animation:blink 1s step-end infinite;}
+@keyframes blink{50%{opacity:0;}}
+
+/* chain / DAG */
+.chain{display:flex;align-items:stretch;gap:0;margin:20px 0;flex-wrap:wrap;}
+.node{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;padding:14px 16px;min-width:150px;text-align:center;position:relative;transition:all .3s;}
+.node.active{border-color:var(--clay);box-shadow:0 4px 16px rgba(217,119,87,.25);transform:translateY(-2px);}
+.node.done{border-color:var(--olive);}
+.node .ic{font-size:22px;color:var(--clay);}
+.node.done .ic{color:var(--olive);}
+.node .nm{font-family:var(--mono);font-size:12px;font-weight:600;margin-top:6px;}
+.node .role{font-size:11px;color:var(--g500);margin-top:2px;}
+.arrow{display:flex;align-items:center;padding:0 10px;color:var(--g300);font-size:20px;}
+.arrow.lit{color:var(--clay);}
+.verdict-badge{display:inline-block;margin:10px 0 0;font-family:var(--mono);font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;background:var(--olive-light);color:var(--olive);opacity:0;transition:opacity .3s;}
+.verdict-badge.show{opacity:1;}
+.branch{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;}
+.branch .b{flex:1;min-width:200px;border:1.5px dashed var(--g300);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--g500);transition:all .3s;}
+.branch .b.lit-ok{border-style:solid;border-color:var(--olive);color:var(--olive);background:var(--olive-light);}
+.branch .b.lit-block{border-style:solid;border-color:var(--clay);color:var(--clay);background:var(--clay-light);}
+
+.exit-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+.exit-table th{background:var(--g100);text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--g300);}
+.exit-table td{padding:8px 12px;border-bottom:1px solid var(--g200);vertical-align:top;}
+.exit-table td code{font-weight:600;}
+
+footer{margin-top:60px;border-top:1.5px solid var(--g300);padding-top:20px;font-size:13px;color:var(--g500);text-align:center;}
+[lang="en"] .zh{display:none;} [lang="zh-CN"] .en{display:none;}
+@media(max-width:720px){.analogy,.pipes{grid-template-columns:1fr;} .pipe.stdout{border-right:none;border-bottom:1px solid var(--g300);}}
+.kiro-nav{position:sticky;top:0;z-index:999;background:var(--paper);border-bottom:1px solid var(--g300);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;width:100%;font-family:var(--sans);}
+.kiro-nav .brand{font-family:var(--serif);font-weight:700;font-size:1.2rem;color:var(--slate);text-decoration:none;display:flex;align-items:center;gap:8px;}
+.kiro-nav .brand i{color:var(--clay);}
+.kiro-nav .nav-controls{display:flex;gap:8px;align-items:center;}
+.kiro-nav .nav-controls button{border:1.5px solid var(--g300);background:var(--paper);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer;color:var(--g500);transition:all .15s;}
+.kiro-nav .nav-controls button.active,.kiro-nav .nav-controls button:hover{background:var(--clay);color:#fff;border-color:var(--clay);}
+.kiro-nav .back-link{font-size:.8rem;color:var(--g500);text-decoration:none;display:flex;align-items:center;gap:4px;}
+</style>
+<link rel="stylesheet" href="../kiro-base.css">
+</head>
+<body>
+<nav class="kiro-nav">
+  <a href="../index.html" class="brand"><i class="fas fa-bolt"></i> kiro-pure</a>
+  <div class="nav-controls">
+    <button onclick="switchLang('zh-CN')" class="active" id="btnZh">中文</button>
+    <button onclick="switchLang('en')" id="btnEn">EN</button>
+    <button onclick="toggleTheme()" id="btnTheme"><i class="fas fa-moon"></i></button>
+    <a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="zh">可视化演示</span><span class="en">Visual Demo</span></div>
+    <h1><span class="zh">把 Agent 变成一个规矩的 Unix 零件</span><span class="en">Turning an Agent into a Well-Behaved Unix Component</span></h1>
+    <p class="intro">
+      <span class="zh">run-agent.sh 用进程边界把「会聊天的 AI」改造成「可被脚本调用的零件」：标准输入进、结构化结果从 stdout 出、过程噪音走 stderr。下面三屏直观演示这个效果。</span>
+      <span class="en">run-agent.sh uses a process boundary to turn a chatty AI into a scriptable component: standardized input in, structured result out on stdout, process noise on stderr. Three panels below show the effect.</span>
+    </p>
+  </header>
+
+  <!-- 1. ANALOGY -->
+  <section id="why">
+    <h2><span class="zh">① 为什么：话痨同事 → 自动售货机</span><span class="en">① Why: chatty colleague → vending machine</span></h2>
+    <p class="lead"><span class="zh">同一次 reviewer 调用的真实实测输出 —— 改造前后对比：</span><span class="en">Real measured output of the same reviewer call — before vs after:</span></p>
+    <div class="analogy">
+      <div class="acard bad">
+        <span class="tag"><span class="zh">改造前 · stdout 混杂</span><span class="en">BEFORE · mixed stdout</span></span>
+        <h4><span class="zh">🗣️ 像问话痨同事</span><span class="en">🗣️ Like asking a chatty colleague</span></h4>
+        <p style="font-size:13px;"><span class="zh">叙述和结论粘在同一行，程序没法稳定接住。</span><span class="en">Narration and conclusion stuck on one line — a program can't reliably parse it.</span></p>
+        <div class="mono"><span class="narr">I'll run the reviewer script on the daily report with the html profile.</span><span class="res">PUBLISH-OK (100/100) — all hard gates pass...</span></div>
+      </div>
+      <div class="acard good">
+        <span class="tag"><span class="zh">改造后 · stdout 纯净</span><span class="en">AFTER · clean stdout</span></span>
+        <h4><span class="zh">🤖 像用自动售货机</span><span class="en">🤖 Like a vending machine</span></h4>
+        <p style="font-size:13px;"><span class="zh">投币（输入契约）→ 出货（RESULT 契约）。可直接 <code>json.load</code>。</span><span class="en">Coin in (input contract) → item out (RESULT contract). Directly <code>json.load</code>-able.</span></p>
+        <div class="mono"><span class="res">{"verdict":"PUBLISH-OK","score":100,
+ "hard_gates":{...},"soft_scores":{...}}</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. STREAM SPLIT -->
+  <section id="split">
+    <h2><span class="zh">② 流分离：出菜口 vs 后厨</span><span class="en">② Stream split: service window vs kitchen</span></h2>
+    <p class="lead"><span class="zh">点「运行」看一次调用的输出如何分流 —— stdout 只走最终结果（给程序），stderr 走叙述 + 工具日志（给人调试）。</span><span class="en">Hit Run to watch one call split — stdout carries only the final result (for programs), stderr carries narration + tool logs (for humans).</span></p>
+    <div class="demo">
+      <div class="bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="cmd">run-agent.sh reviewer "Review daily-report-2026-10-15.html" --contract json --quiet</span>
+        <div class="controls"><button onclick="playSplit()"><i class="fas fa-play"></i> <span class="zh">运行</span><span class="en">Run</span></button></div>
+      </div>
+      <div class="pipes">
+        <div class="pipe stdout" id="pipeOut">
+          <div class="lbl"><i class="fas fa-arrow-right-to-bracket"></i> stdout <span class="sub"><span class="zh">· 出菜口 · 给程序</span><span class="en">· service window · for programs</span></span></div>
+          <div id="outBody"></div>
+        </div>
+        <div class="pipe stderr" id="pipeErr">
+          <div class="lbl"><i class="fas fa-fire-burner"></i> stderr <span class="sub"><span class="zh">· 后厨 · 给人调试</span><span class="en">· kitchen · for humans</span></span></div>
+          <div id="errBody"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note"><span class="zh"><strong>实测发现：</strong>CLI 本就把 <code>[tool]</code> 日志写到 stderr；脚本再把 agent 的叙述剥到 stderr，并用 <code>grep -o 'RESULT=.*'</code> 行内抠取载荷（叙述常和 RESULT 拼同一行，故不能锚行首）。出菜口由此彻底干净。</span><span class="en"><strong>Measured:</strong> the CLI already routes <code>[tool]</code> logs to stderr; the script then peels the agent's narration to stderr and extracts the payload with <code>grep -o 'RESULT=.*'</code> (narration often shares the line with RESULT, so no <code>^</code> anchor). The service window ends up clean.</span></div>
+  </section>
+
+  <!-- 3. CHAIN -->
+  <section id="chain">
+    <h2><span class="zh">③ 可组合：agent 链式编排</span><span class="en">③ Composable: chaining agents</span></h2>
+    <p class="lead"><span class="zh">一旦每个 agent 都是规矩零件，就能像搭积木一样串起来，由 verdict 驱动分支。点「运行链路」。</span><span class="en">Once each agent is a well-behaved part, you chain them like blocks, with the verdict driving the branch. Hit Run chain.</span></p>
+    <div class="demo">
+      <div class="bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="cmd">main → html-generator → reviewer → (publish | redo)</span>
+        <div class="controls"><button onclick="playChain()"><i class="fas fa-play"></i> <span class="zh">运行链路</span><span class="en">Run chain</span></button></div>
+      </div>
+      <div style="padding:22px 18px;">
+        <div class="chain">
+          <div class="node" id="n-main"><div class="ic"><i class="fas fa-user-gear"></i></div><div class="nm">main</div><div class="role"><span class="zh">主控</span><span class="en">orchestrator</span></div></div>
+          <div class="arrow" id="a-1"><i class="fas fa-angle-right"></i></div>
+          <div class="node" id="n-gen"><div class="ic"><i class="fas fa-file-code"></i></div><div class="nm">html-generator</div><div class="role"><span class="zh">产出报告</span><span class="en">produce report</span></div></div>
+          <div class="arrow" id="a-2"><i class="fas fa-angle-right"></i></div>
+          <div class="node" id="n-rev"><div class="ic"><i class="fas fa-clipboard-check"></i></div><div class="nm">reviewer</div><div class="role"><span class="zh">质量门</span><span class="en">quality gate</span></div></div>
+        </div>
+        <div style="text-align:center;"><span class="verdict-badge" id="vbadge">RESULT=PUBLISH-OK</span></div>
+        <div class="branch">
+          <div class="b" id="b-ok"><i class="fas fa-rocket"></i> <span class="zh">PUBLISH-OK → 发布（加 index 卡片、可 push）</span><span class="en">PUBLISH-OK → publish (add index card, push)</span></div>
+          <div class="b" id="b-block"><i class="fas fa-rotate-left"></i> <span class="zh">BLOCK → 把问题打回 html-generator 重做</span><span class="en">BLOCK → send issues back to html-generator to redo</span></div>
+        </div>
+      </div>
+    </div>
+    <table class="exit-table">
+      <tr><th>exit</th><th><span class="zh">含义</span><span class="en">Meaning</span></th><th><span class="zh">调用方动作</span><span class="en">Caller action</span></th></tr>
+      <tr><td><code>0</code></td><td><span class="zh">跑完，契约命中</span><span class="en">ran, contract hit</span></td><td><span class="zh">按 RESULT 决策</span><span class="en">act on RESULT</span></td></tr>
+      <tr><td><code>124</code></td><td><span class="zh">超时</span><span class="en">timeout</span></td><td><span class="zh">回退底层脚本</span><span class="en">fall back to script</span></td></tr>
+      <tr><td><code>2</code></td><td><span class="zh">用法 / guard（未知 agent、深度保护、坏 JSON）</span><span class="en">usage / guard</span></td><td><span class="zh">修调用</span><span class="en">fix the call</span></td></tr>
+      <tr><td><code>3</code></td><td><span class="zh">没遵守契约（无 RESULT=）</span><span class="en">contract missing</span></td><td><span class="zh">用 best-effort 末行</span><span class="en">use best-effort last line</span></td></tr>
+    </table>
+  </section>
+
+  <footer>
+    <span class="zh">由 Kiro 生成 · 2026-10-16 · 数据来自 run-agent.sh v2 真实实测</span>
+    <span class="en">By Kiro · 2026-10-16 · data from real run-agent.sh v2 runs</span>
+  </footer>
+</div>
+
+<script>
+function switchLang(l){document.documentElement.lang=l;document.querySelectorAll('.nav-controls button').forEach(b=>b.classList.remove('active'));document.getElementById(l==='zh-CN'?'btnZh':'btnEn').classList.add('active');}
+function toggleTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';document.getElementById('btnTheme').innerHTML=d.dataset.theme==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';}
+window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('progressBar').style.width=(h>0?window.scrollY/h*100:0)+'%';});
+
+// --- stream split demo ---
+const outSteps=[{t:'{"verdict":"PUBLISH-OK","score":100,"hard_gates":{...},"soft_scores":{...}}',c:'result'}];
+const errSteps=[
+  {t:'🤖 Spawning agent \'reviewer\' (process-boundary, timeout 180s)',c:'tool'},
+  {t:'I\'ll run the reviewer script with the html profile against the index.',c:'narr'},
+  {t:'[tool] Running: python3 review-artifact.py ... --type html --json',c:'tool'},
+  {t:'[tool] status: Completed',c:'tool'},
+];
+function addLine(host,txt,cls,delay){return new Promise(r=>{setTimeout(()=>{const d=document.createElement('div');d.className='line '+cls;d.textContent=txt;host.appendChild(d);requestAnimationFrame(()=>d.classList.add('show'));r();},delay);});}
+async function playSplit(){
+  const ob=document.getElementById('outBody'),eb=document.getElementById('errBody');
+  ob.innerHTML='';eb.innerHTML='';
+  // stderr fills first (process noise happens during the run)
+  let d=250;
+  for(const s of errSteps){await addLine(eb,s.t,s.c,d);d=420;}
+  // then the clean result lands on stdout
+  await addLine(ob,outSteps[0].t,outSteps[0].c,500);
+}
+
+// --- chain demo ---
+function reset(ids){ids.forEach(i=>{const e=document.getElementById(i);e&&e.classList.remove('active','done','lit','lit-ok','lit-block','show');});}
+async function playChain(){
+  reset(['n-main','n-gen','n-rev','a-1','a-2','vbadge','b-ok','b-block']);
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const main=document.getElementById('n-main'),gen=document.getElementById('n-gen'),rev=document.getElementById('n-rev');
+  const a1=document.getElementById('a-1'),a2=document.getElementById('a-2');
+  main.classList.add('active');await wait(600);
+  a1.classList.add('lit');main.classList.remove('active');main.classList.add('done');gen.classList.add('active');await wait(900);
+  a2.classList.add('lit');gen.classList.remove('active');gen.classList.add('done');rev.classList.add('active');await wait(900);
+  rev.classList.remove('active');rev.classList.add('done');
+  document.getElementById('vbadge').classList.add('show');await wait(700);
+  document.getElementById('b-ok').classList.add('lit-ok');
+}
+</script>
+</body>
+</html>

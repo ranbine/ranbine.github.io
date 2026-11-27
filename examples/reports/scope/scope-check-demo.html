@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scope Check (demo) - Release 2.4</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@400;700&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f8f9fa;--fg:#1d2630;--clay:#4099ff;--clay-light:#d6edff;--olive:#2ed8b6;--olive-light:#d4f7ee;--amber:#ffb64d;--amber-light:#fff3d6;--red:#ff5370;--red-light:#ffe0e6;--gray:#5b6b79;--g100:#f3f5f7;--g200:#e8eaed;--g300:#dbe0e5;--border:#dbe0e5;--max-w:900px;--kb-bg:#f8f9fa;--kb-surface:#fff;--kb-text:#1d2630;--kb-text-s:#3e4853;--kb-text-m:#5b6b79;--kb-accent:#4099ff;--kb-border:#dbe0e5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--fg);line-height:1.6}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--clay);z-index:1000;transition:width .1s}
+.nav-controls{display:flex;gap:8px;align-items:center}.nav-controls button{border:none;background:var(--g100);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--fg)}.nav-controls button:hover{background:var(--clay);color:#fff;border-color:var(--clay)}
+[lang="zh"] .en{display:none} [lang="en"] .zh{display:none}
+.container{max-width:var(--max-w);margin:0 auto;padding:40px 24px 80px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--clay);font-weight:500;margin-bottom:8px}
+h1{font-family:'Roboto',serif;font-size:2rem;margin-bottom:12px}
+.subtitle{color:var(--gray);font-size:15px;margin-bottom:32px}
+nav.toc{position:sticky;top:0;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:32px;z-index:50;display:flex;gap:8px;flex-wrap:wrap}
+nav.toc a{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;text-decoration:none;color:var(--fg);background:var(--g100);border:1px solid var(--border);transition:all .2s}
+nav.toc a.active,nav.toc a:hover{background:var(--clay);color:#fff;border-color:var(--clay)}
+section{margin-bottom:48px}
+.section-num{font-family:'Roboto Mono',monospace;font-size:13px;color:var(--clay);margin-bottom:4px}
+h2{font-family:'Roboto',serif;font-size:1.4rem;margin-bottom:16px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(4,26,55,.08)}
+.stat-card .num{font-size:2rem;font-weight:700}.stat-card .label{font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+.stat-card.passed .num{color:var(--olive)}.stat-card.failed .num{color:var(--red)}.stat-card.error .num{color:var(--amber)}.stat-card.notfound .num{color:var(--gray)}.stat-card.started .num{color:#673ab7}
+.donut-container{display:flex;justify-content:center;margin:24px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px}
+th{background:var(--g100);text-align:left;padding:8px 10px;font-weight:500;border-bottom:2px solid var(--border);position:sticky;top:48px;cursor:pointer;user-select:none}
+th:hover{background:var(--g200)}th::after{content:'';display:inline-block;margin-left:4px;font-size:10px;color:var(--gray)}
+th.asc::after{content:'▲'}th.desc::after{content:'▼'}
+td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:hover{background:var(--g100)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-passed{background:var(--olive-light);color:#0d5c4d}.badge-failed{background:var(--red-light);color:#d6354f}
+.badge-error{background:var(--amber-light);color:#6b4c00}.badge-notfound{background:var(--g200);color:var(--gray)}.badge-started{background:#e8d5f5;color:#3b1f6e}
+.case-name{font-family:'Roboto Mono',monospace;font-size:12px;word-break:break-all}
+.case-name a{color:var(--fg);text-decoration:none;border-bottom:1px dashed var(--g300)}.case-name a:hover{color:var(--clay);border-bottom-color:var(--clay)}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{padding:4px 12px;border-radius:16px;font-size:12px;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .2s}
+.filter-btn:hover,.filter-btn.active{background:var(--clay);color:#fff;border-color:var(--clay)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--clay);color:#fff;border:none;cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.back-top.show{display:flex}
+.source-tag{font-size:11px;color:var(--gray)}.iter-tag{font-size:11px;background:var(--clay-light);color:var(--clay);padding:2px 6px;border-radius:3px;margin-left:8px}
+
+/* kiro-fx v1: reduced motion + card spotlight + button fill */
+:root { --fx-spot: rgba(64,153,255,.08); --fx-fill: rgba(64,153,255,.14); }
+.card, .stat-card { background-image: radial-gradient(420px circle at var(--mx, -999px) var(--my, -999px), var(--fx-spot), transparent 45%); }
+.kiro-nav .nav-controls button { position: relative; }
+.kiro-nav .nav-controls button, .back-to-top, .back-top { overflow: hidden; isolation: isolate; }   /* back-to-top stays position: fixed */
+.kiro-nav .nav-controls button::before, .back-to-top::before, .back-top::before {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: -1; border-radius: 50%;
+  background: var(--fx-fill); transform: translate(-50%, -50%); transition: width .5s ease, height .5s ease; pointer-events: none;
+}
+.back-to-top::before, .back-top::before { background: rgba(255,255,255,.22); }
+.kiro-nav .nav-controls button:hover::before, .kiro-nav .nav-controls button:focus-visible::before,
+.back-to-top:hover::before, .back-top:hover::before, .back-to-top:focus-visible::before, .back-top:focus-visible::before { width: 240px; height: 240px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="../../kiro-base.css"></head><body>
+<nav class="kiro-nav"><a href="../../index.html" class="brand"><i class="fas fa-bolt"></i> kiro-pure</a><div class="nav-controls"><button onclick="toggleLang()"><span class="zh">EN</span><span class="en">中文</span></button><a href="../../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back</a></div></nav>
+<div class="progress-bar" id="progressBar"></div>
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<div class="container">
+<p class="eyebrow">DEMO · UPGRADE / ROBUSTNESS / PERFORMANCE</p>
+<h1><span class="zh">Scope 执行状态检查</span><span class="en">Scope Execution Status Check</span></h1>
+<p class="subtitle"><span class="zh">Release 2.4 · 生成时间 2026-11-24 08:30 · 共 17 个测试用例 · 按执行频率窗口检查 · 演示数据</span><span class="en">Release 2.4 · Generated 2026-11-24 08:30 · 17 test cases · Checked within iteration window · demo data</span></p>
+<nav class="toc" id="toc"><a href="#overview"><span class="zh">总览</span><span class="en">Overview</span></a>
+<a href="#upgrade">Upgrade</a>
+<a href="#robustness">Robustness</a>
+<a href="#performance">Performance</a>
+</nav>
+<section id="overview"><div class="section-num">01</div><h2><span class="zh">总览</span><span class="en">Overview</span></h2><div class="stats-grid">
+<div class="stat-card passed"><div class="num">11</div><div class="label">Passed</div></div>
+<div class="stat-card failed"><div class="num">3</div><div class="label">Failed</div></div>
+<div class="stat-card error"><div class="num">1</div><div class="label">Error</div></div>
+<div class="stat-card started"><div class="num">1</div><div class="label">Started</div></div>
+<div class="stat-card notfound"><div class="num">1</div><div class="label">N/A</div></div>
+</div><div class="donut-container"><svg width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Pass rate 65%"><circle cx="100" cy="100" r="80" fill="none" stroke="var(--g200)" stroke-width="24"/><circle cx="100" cy="100" r="80" fill="none" stroke="var(--olive)" stroke-width="24" stroke-dasharray="325.2 502.7" stroke-dashoffset="-0.0" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="80" fill="none" stroke="var(--red)" stroke-width="24" stroke-dasharray="88.7 502.7" stroke-dashoffset="-325.2" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="80" fill="none" stroke="var(--amber)" stroke-width="24" stroke-dasharray="29.6 502.7" stroke-dashoffset="-414.0" transform="rotate(-90 100 100)"/><circle cx="100" cy="100" r="80" fill="none" stroke="var(--g300)" stroke-width="24" stroke-dasharray="59.1 502.7" stroke-dashoffset="-443.5" transform="rotate(-90 100 100)"/><text x="100" y="95" text-anchor="middle" font-size="28" font-weight="700" fill="var(--olive)">65%</text><text x="100" y="118" text-anchor="middle" font-size="12" fill="var(--gray)">Pass Rate</text></svg></div>
+<p style="text-align:center;font-size:13px;color:var(--gray)"><span class="zh">版本范围: 2.4.0-114 ~ 2.4.0-118 · 检查窗口: weekly=7d, bi-weekly=14d</span><span class="en">Version range: 2.4.0-114 ~ 2.4.0-118 · Window: weekly=7d, bi-weekly=14d</span></p></section>
+<section id="upgrade"><div class="section-num">02</div><h2>Upgrade <span style="font-size:14px;color:var(--gray)">In-service upgrade / rollback</span><span class="iter-tag">weekly</span></h2>
+<div class="filter-bar"><button class="filter-btn active" data-filter="all">All (6)</button><button class="filter-btn" data-filter="Failed">Failed (1)</button><button class="filter-btn" data-filter="Error">Error (1)</button><button class="filter-btn" data-filter="Passed">Passed (4)</button></div>
+<table class="result-table"><thead><tr><th style="width:80px"><span class="zh">状态</span><span class="en">Status</span></th><th><span class="zh">测试用例</span><span class="en">Test Case</span></th><th style="width:100px"><span class="zh">版本</span><span class="en">Version</span></th><th style="width:70px"><span class="zh">日期</span><span class="en">Date</span></th><th style="width:90px"><span class="zh">来源</span><span class="en">Source</span></th></tr></thead><tbody>
+<tr data-status="Failed"><td><span class="badge badge-failed">Failed</span></td><td class="case-name">Upgrade_Rolling_N-1_NormalLoad</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Failed" class="detail-row"><td colspan="5"><details><summary style="font-size:11px;color:var(--clay);cursor:pointer">Analysis</summary><div style="font-size:12px;color:var(--gray);padding:4px 0 4px 8px"><b>Reason:</b> Pod readiness timeout after step 4 (300s)<br><b>Master:</b> Failed (2.5.0-41) [same issue]<br><b>Master history:</b> <span style="color:var(--amber)">2/10 PASS (20%)</span>, last PASS 2.5.0-30 (11-12)</div></details></td></tr>
+
+<tr data-status="Error"><td><span class="badge badge-error">Error</span></td><td class="case-name">Upgrade_SchemaMigration_Online</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Error" class="detail-row"><td colspan="5"><details><summary style="font-size:11px;color:var(--clay);cursor:pointer">Analysis</summary><div style="font-size:12px;color:var(--gray);padding:4px 0 4px 8px"><b>Reason:</b> Test environment lost connection to the database during setup<br><b>Master:</b> <span style="color:var(--olive)">Passed</span> (2.5.0-41) → <span style="color:var(--red)"><b>regression</b></span><br><b>Master history:</b> <span style="color:var(--olive)">9/10 PASS (90%)</span>, last PASS 2.5.0-41 (11-23)</div></details></td></tr>
+
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Upgrade_BlueGreen_Switch</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">manual</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Upgrade_Canary_10pct</td><td>2.4.0-116</td><td>11-21</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Upgrade_Rollback_N-1_HighLoad</td><td>2.4.0-117</td><td>11-22</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Upgrade_Rolling_N-2_NormalLoad</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+</tbody></table></section>
+<section id="robustness"><div class="section-num">03</div><h2>Robustness <span style="font-size:14px;color:var(--gray)">Node / pod failure recovery</span><span class="iter-tag">weekly</span></h2>
+<div class="filter-bar"><button class="filter-btn active" data-filter="all">All (6)</button><button class="filter-btn" data-filter="Failed">Failed (2)</button><button class="filter-btn" data-filter="Error">Error (0)</button><button class="filter-btn" data-filter="Passed">Passed (4)</button></div>
+<table class="result-table"><thead><tr><th style="width:80px"><span class="zh">状态</span><span class="en">Status</span></th><th><span class="zh">测试用例</span><span class="en">Test Case</span></th><th style="width:100px"><span class="zh">版本</span><span class="en">Version</span></th><th style="width:70px"><span class="zh">日期</span><span class="en">Date</span></th><th style="width:90px"><span class="zh">来源</span><span class="en">Source</span></th></tr></thead><tbody>
+<tr data-status="Failed"><td><span class="badge badge-failed">Failed</span></td><td class="case-name">Robustness_NetworkPartition_30s</td><td>2.4.0-117</td><td>11-22</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Failed" class="detail-row"><td colspan="5"><details><summary style="font-size:11px;color:var(--clay);cursor:pointer">Analysis</summary><div style="font-size:12px;color:var(--gray);padding:4px 0 4px 8px"><b>Reason:</b> Split-brain detected: two leaders for 4s<br><b>Master:</b> Failed (2.5.0-40) [same issue]<br><b>Master history:</b> <span style="color:var(--red)">0/8 PASS (0%)</span>, no PASS in last 8 → <span style="color:var(--red)"><b>long-term red</b></span></div></details></td></tr>
+
+<tr data-status="Failed"><td><span class="badge badge-failed">Failed</span></td><td class="case-name">Robustness_NodeDrain_Reboot</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Failed" class="detail-row"><td colspan="5"><details><summary style="font-size:11px;color:var(--clay);cursor:pointer">Analysis</summary><div style="font-size:12px;color:var(--gray);padding:4px 0 4px 8px"><b>Reason:</b> Traffic loss 2.1% &gt; threshold 0.5% during drain<br><b>Master:</b> <span style="color:var(--olive)">Passed</span> (2.5.0-41) → <span style="color:var(--red)"><b>regression</b></span><br><b>Master history:</b> <span style="color:var(--olive)">10/10 PASS (100%)</span>, last PASS 2.5.0-41 (11-23)</div></details></td></tr>
+
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Robustness_ClockSkew_5s</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Robustness_DiskFull_Recover</td><td>2.4.0-116</td><td>11-21</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Robustness_PodKill_Follower</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Robustness_PodKill_Leader</td><td>2.4.0-118</td><td>11-23</td><td class="source-tag">nightly</td></tr>
+</tbody></table></section>
+<section id="performance"><div class="section-num">04</div><h2>Performance <span style="font-size:14px;color:var(--gray)">Throughput / latency baselines</span><span class="iter-tag">bi-weekly</span></h2>
+<div class="filter-bar"><button class="filter-btn active" data-filter="all">All (5)</button><button class="filter-btn" data-filter="Failed">Failed (0)</button><button class="filter-btn" data-filter="Error">Error (0)</button><button class="filter-btn" data-filter="Passed">Passed (3)</button></div>
+<table class="result-table"><thead><tr><th style="width:80px"><span class="zh">状态</span><span class="en">Status</span></th><th><span class="zh">测试用例</span><span class="en">Test Case</span></th><th style="width:100px"><span class="zh">版本</span><span class="en">Version</span></th><th style="width:70px"><span class="zh">日期</span><span class="en">Date</span></th><th style="width:90px"><span class="zh">来源</span><span class="en">Source</span></th></tr></thead><tbody>
+<tr data-status="Started"><td><span class="badge badge-started">Started</span></td><td class="case-name">Perf_Soak_24h</td><td>2.4.0-118</td><td>11-24</td><td class="source-tag">nightly</td></tr>
+<tr data-status="NOT_FOUND"><td><span class="badge badge-notfound">NOT_FOUND</span></td><td class="case-name">Perf_ColdStart_Burst</td><td>—</td><td>—</td><td class="source-tag">—</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Perf_Latency_P99_HighLoad</td><td>2.4.0-115</td><td>11-18</td><td class="source-tag">nightly</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Perf_ScaleOut_2to8</td><td>2.4.0-114</td><td>11-17</td><td class="source-tag">manual</td></tr>
+<tr data-status="Passed"><td><span class="badge badge-passed">Passed</span></td><td class="case-name">Perf_Throughput_Baseline_8vCPU</td><td>2.4.0-115</td><td>11-18</td><td class="source-tag">nightly</td></tr>
+</tbody></table></section>
+</div>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';document.getElementById('backTop').classList.toggle('show',h.scrollTop>300)});
+function toggleLang(){document.documentElement.lang=document.documentElement.lang==='zh'?'en':'zh'}
+const obs=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav.toc a').forEach(l=>l.classList.remove('active'));const l=document.querySelector(`nav.toc a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+document.querySelectorAll('.filter-btn').forEach(b=>{b.addEventListener('click',function(){this.parentElement.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');const f=this.dataset.filter,t=this.parentElement.nextElementSibling;if(!t)return;t.querySelectorAll('tbody tr').forEach(r=>{if(r.classList.contains('detail-row')){r.style.display=r.previousElementSibling?.style.display||''}else{r.style.display=f==='all'?'':r.dataset.status===f?'':'none'}})})});
+document.querySelectorAll('.result-table th').forEach(th=>{th.addEventListener('click',function(){const table=this.closest('table'),tbody=table.querySelector('tbody'),idx=Array.from(this.parentElement.children).indexOf(this);const groups=[];let cur=null;tbody.querySelectorAll('tr').forEach(r=>{if(!r.classList.contains('detail-row')){cur={main:r,detail:null};groups.push(cur)}else if(cur){cur.detail=r}});const isAsc=this.classList.contains('asc');table.querySelectorAll('th').forEach(h=>h.classList.remove('asc','desc'));this.classList.add(isAsc?'desc':'asc');const dir=isAsc?-1:1;groups.sort((a,b)=>{let va=a.main.children[idx]?.textContent.trim()||'',vb=b.main.children[idx]?.textContent.trim()||'';if(idx===2){const na=parseInt(va.split('-').pop())||0,nb=parseInt(vb.split('-').pop())||0;return(na-nb)*dir}return va.localeCompare(vb)*dir});groups.forEach(g=>{tbody.appendChild(g.main);if(g.detail)tbody.appendChild(g.detail)})})});
+</script><script>
+/* kiro-fx v1: card spotlight (one delegated listener, rAF-throttled; off under reduced motion) */
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let raf = 0, last = null, x = 0, y = 0;
+  document.addEventListener('mousemove', e => {
+    const card = e.target.closest && e.target.closest('.card, .stat-card');
+    if (last && last !== card) { last.style.removeProperty('--mx'); last.style.removeProperty('--my'); }
+    last = card; x = e.clientX; y = e.clientY;          // listener only records; rAF reads the latest
+    if (!card || raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!last) return;
+      const r = last.getBoundingClientRect();
+      last.style.setProperty('--mx', (x - r.left) + 'px');
+      last.style.setProperty('--my', (y - r.top) + 'px');
+    });
+  });
+})();
+</script>
+</body></html>

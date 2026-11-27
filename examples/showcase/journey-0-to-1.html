@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From 0 to 1: how Kiro Lab grew — kiro-pure</title>
+<link rel="stylesheet" href="../kiro-base.css">
+<style>
+/* showcase-dark: display pages (demo / intro / methodology). Not for reports. */
+:root {
+  --sd-bg: #0a0a0c;
+  --sd-text: #f4f4f6;
+  --sd-muted: #8a8a93;            /* 5.7:1 on --sd-bg (WCAG AA) */
+  --sd-line: rgba(255,255,255,.06);
+  --sd-card: rgba(255,255,255,.03);
+  --sd-pink: #ff007f; --sd-violet: #9b5cf0; --sd-cyan: #00dfd8;
+  --sd-sans: "Inter", "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* kiro-base.css compat (nav) */
+  --kb-bg: var(--sd-bg); --kb-surface: #141418; --kb-text: var(--sd-text);
+  --kb-text-s: #c9c9d1; --kb-text-m: var(--sd-muted); --kb-accent: var(--sd-cyan); --kb-border: #26262c;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--sd-bg); color: var(--sd-text); font-family: var(--sd-sans); overflow-x: hidden; min-height: 100vh; line-height: 1.6; }
+
+.kiro-nav { background: rgba(10,10,12,.72); border-bottom: 1px solid var(--sd-line); }
+.kiro-nav .brand { font-family: var(--sd-sans); color: var(--sd-text); }
+.kiro-nav .nav-controls button { background: transparent; color: var(--sd-muted); border: 1px solid #2a2a31; }
+.kiro-nav .nav-controls button.active, .kiro-nav .nav-controls button:hover { color: var(--sd-text); border-color: var(--sd-cyan); background: transparent; }
+
+/* Background: slow pulsing mesh + cursor glow */
+.bg-mesh { position: fixed; inset: 0; z-index: 0; opacity: .7; pointer-events: none;
+  background: radial-gradient(at 10% 20%, rgba(91,33,182,.2) 0, transparent 50%),
+              radial-gradient(at 90% 80%, rgba(6,182,212,.2) 0, transparent 50%);
+  filter: blur(40px); animation: sdPulse 10s ease-in-out infinite alternate; }
+@keyframes sdPulse { to { transform: scale(1.1); } }
+.cursor-glow { position: fixed; top: 0; left: 0; width: 300px; height: 300px; z-index: 1; pointer-events: none;
+  background: radial-gradient(circle, rgba(138,43,226,.15) 0%, rgba(0,212,255,0) 70%);
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity .3s; }
+
+main { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 5rem 2rem 4rem;
+  display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 56px); }
+
+/* Hero */
+.hero { text-align: center; margin-bottom: 4.5rem; animation: sdUp 1.2s cubic-bezier(.2,1,.2,1) both; }
+.hero .eyebrow { font-size: .8rem; letter-spacing: 4px; text-transform: uppercase; color: var(--sd-cyan); margin-bottom: 1rem; }
+.hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 800; letter-spacing: -1px; line-height: 1.15;
+  background: linear-gradient(135deg, var(--sd-pink), var(--sd-violet), var(--sd-cyan), var(--sd-pink));
+  background-size: 300% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  animation: sdShine 8s linear infinite; }
+@keyframes sdShine { to { background-position: 300% center; } }
+.hero p { font-size: 1.15rem; color: var(--sd-muted); margin-top: 1rem; letter-spacing: 1px; max-width: 760px; }
+
+/* Cards: entrance stagger (JS sets --i), then JS takes over transform for 3D tilt */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 2rem; width: 100%; }
+.card { position: relative; overflow: hidden; padding: 2.2rem; border-radius: 20px; cursor: default;
+  background: var(--sd-card); border: 1px solid var(--sd-line); backdrop-filter: blur(10px);
+  transform-style: preserve-3d; transition: border-color .5s, box-shadow .5s;
+  animation: sdUp 1.1s cubic-bezier(.2,1,.2,1) both; animation-delay: calc(300ms + var(--i, 0) * 90ms); }
+.card.ready { animation: none; transition: border-color .5s, box-shadow .5s, transform .15s ease-out; }
+.card:hover { border-color: rgba(0,223,216,.4); box-shadow: 0 20px 40px rgba(0,0,0,.4), 0 0 30px rgba(0,223,216,.1); }
+.card::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(600px circle at var(--mx, -999px) var(--my, -999px), rgba(255,255,255,.06), transparent 40%); }
+.card-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; margin-bottom: 1.4rem; color: var(--sd-cyan);
+  background: linear-gradient(135deg, rgba(121,40,202,.2), rgba(0,223,216,.2)); transition: transform .3s; }
+.card:hover .card-icon { transform: scale(1.1) translateZ(20px); }
+.card h3 { font-size: 1.35rem; font-weight: 600; margin-bottom: .7rem; }
+.card p { color: var(--sd-muted); font-size: .95rem; }
+.card .tag { display: inline-block; margin-top: 1rem; font-size: .75rem; color: var(--sd-cyan); border: 1px solid rgba(0,223,216,.3); border-radius: 999px; padding: 2px 10px; }
+@keyframes sdUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Optional extra section (diagram, timeline...) */
+.extra { width: 100%; margin-top: 4.5rem; }
+.extra h2 { font-size: 1.6rem; font-weight: 700; text-align: center; margin-bottom: 2rem; }
+
+/* CTA button: center-out gradient fill */
+.fancy-btn { margin-top: 4rem; padding: 1rem 2.5rem; border-radius: 50px; border: 2px solid var(--sd-text);
+  background: transparent; color: var(--sd-text); font: 600 1rem var(--sd-sans); cursor: pointer; text-decoration: none;
+  position: relative; overflow: hidden; isolation: isolate; transition: border-color .4s; }
+.fancy-btn::before { content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: -1; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sd-violet), var(--sd-cyan)); transform: translate(-50%, -50%);
+  transition: width .6s ease, height .6s ease; }
+.fancy-btn:hover, .fancy-btn:focus-visible { border-color: transparent; }
+.fancy-btn:hover::before, .fancy-btn:focus-visible::before { width: 320px; height: 320px; }
+
+footer { position: relative; z-index: 2; text-align: center; color: var(--sd-muted); font-size: .8rem; padding: 2rem 1rem 3rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .cursor-glow { display: none; }
+}
+@media (max-width: 640px) { main { padding-top: 3rem; } .card { padding: 1.6rem; } }
+</style>
+<style>
+/* journey-0-to-1: section styles */
+.card p + p { margin-top: .6rem; }
+.card p .lbl { color: var(--sd-text); font-weight: 600; }
+.extra .lead { text-align: center; color: var(--sd-muted); max-width: 760px; margin: -1.2rem auto 2rem; }
+.principles { list-style: none; counter-reset: p; display: grid; gap: 1rem; max-width: 880px; margin: 0 auto; }
+.principles li { counter-increment: p; position: relative; padding: 1rem 1.2rem 1rem 3.4rem; background: var(--sd-card);
+  border: 1px solid var(--sd-line); border-radius: 14px; color: var(--kb-text-s); }
+.principles li::before { content: counter(p); position: absolute; left: 1.2rem; top: 1rem; color: var(--sd-cyan); font-weight: 800; }
+.principles strong { color: var(--sd-text); display: block; margin-bottom: .2rem; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--sd-line); border-radius: 14px; background: var(--sd-card); }
+.extra table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.extra th, .extra td { padding: .6rem .9rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--sd-line); }
+.extra th { color: var(--sd-cyan); font-weight: 600; font-size: .75rem; letter-spacing: 1px; text-transform: uppercase; }
+.extra td { color: var(--kb-text-s); }
+.extra tr:last-child td { border-bottom: 0; }
+.extra code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .85em; color: var(--sd-text); white-space: nowrap; }
+.map-label { margin: 2.4rem 0 1rem; font-size: .8rem; letter-spacing: 3px; text-transform: uppercase; color: var(--sd-cyan); }
+.map-label:first-of-type { margin-top: 0; }
+.map-label.lab { color: var(--sd-pink); }
+.map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 1.2rem; }
+.map-grid h3 { font-size: 1rem; font-weight: 600; margin-bottom: .5rem; }
+.pitfalls { list-style: none; display: grid; gap: .8rem; max-width: 880px; margin: 0 auto; }
+.pitfalls li { padding: .9rem 1.2rem; border-left: 3px solid var(--sd-pink); background: var(--sd-card); border-radius: 0 12px 12px 0; color: var(--kb-text-s); }
+.pitfalls b { color: var(--sd-text); }
+</style>
+</head>
+<body>
+<nav class="kiro-nav">
+  <a href="../index.html" class="brand">⚡ kiro-pure</a>
+  <div class="nav-controls">
+    <button onclick="switchLang('zh-CN')" id="btnZh">中文</button>
+    <button class="active" onclick="switchLang('en')" id="btnEn">EN</button>
+    <a href="../index.html" class="back-link" data-zh="← 返回" data-en="← Back">← Back</a>
+  </div>
+</nav>
+<div class="bg-mesh" aria-hidden="true"></div>
+<div class="cursor-glow" id="sdGlow" aria-hidden="true"></div>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow" data-zh="展示" data-en="Showcase">Showcase</div>
+    <h1 data-zh="从 0 到 1：Kiro Lab 是怎么长出来的" data-en="From 0 to 1: how Kiro Lab grew">From 0 to 1: how Kiro Lab grew</h1>
+    <p data-zh="2026-05 → 2026-11，一个测试工程师把每天重复的「认知劳动」（看回归结果、找根因、写问题单、做版本对比）逐步交给 agent 的过程。" data-en="2026-05 → 2026-11: a test engineer gradually handing the daily, repetitive cognitive work (reading regression results, root-causing, writing issue reports, comparing versions) to an agent.">2026-05 → 2026-11: a test engineer gradually handing the daily, repetitive cognitive work (reading regression results, root-causing, writing issue reports, comparing versions) to an agent.</p>
+  </section>
+
+  <section class="card-grid">
+    <div class="card"><div class="card-icon">⓪</div><h3 data-zh="阶段 0 · 起步：把「怎么工作」写成文件" data-en="Phase 0 · Start: write down how you work">Phase 0 · Start: write down how you work</h3>
+      <p data-zh="痛点：每次对话都要重新交代偏好和流程。" data-en="Pain: every conversation re-explained preferences and process.">Pain: every conversation re-explained preferences and process.</p>
+      <p data-zh="做了：一个 agent + workflow.md（流程和红线）+ preferences.md（个人偏好），作为 resources 每次自动加载；所有东西进 git。" data-en="Built: one agent + workflow.md (process and red lines) + preferences.md (personal preferences), auto-loaded as resources every session; everything in git.">Built: one agent + workflow.md (process and red lines) + preferences.md (personal preferences), auto-loaded as resources every session; everything in git.</p>
+      <p data-zh="复刻：第一天就上 git；删除类操作写成红线（必须确认、限定路径）。" data-en="Replicate: git from day one; make deletions a red line (explicit confirmation, scoped paths).">Replicate: git from day one; make deletions a red line (explicit confirmation, scoped paths).</p>
+      <span class="tag" data-zh="2026-05 · 第 1 周" data-en="2026-05 · Week 1">2026-05 · Week 1</span></div>
+    <div class="card"><div class="card-icon">①</div><h3 data-zh="阶段 1 · 进入日常：触发词 + 每日流程" data-en="Phase 1 · Daily use: triggers + daily flow">Phase 1 · Daily use: triggers + daily flow</h3>
+      <p data-zh="痛点：早上固定要做的几件事（看结果、处理待办、写日报）每次都要口述。" data-en="Pain: the fixed morning routine (check results, handle to-dos, write the daily report) had to be dictated every time.">Pain: the fixed morning routine (check results, handle to-dos, write the daily report) had to be dictated every time.</p>
+      <p data-zh="做了：触发词路由到 rules/*.md；每日流程、日报、待办队列（cron 写入 pending/）；HTML 报告模板 + 索引页；决策日志。Lab 侧：scope result check 与 upgrade break dashboard 每天在用；分析按「人工寻因 → error pattern → TR 语义匹配（2753 条）」长成 L1/L2/L3。" data-en="Built: trigger words routed to rules/*.md; daily flow, daily report, pending queue (cron writes to pending/); HTML report templates + index page; decision log. Lab side: scope result check and upgrade break dashboard used every day; analysis grew into L1/L2/L3 via manual root-causing → error patterns → semantic TR matching (2753 TRs).">Built: trigger words routed to rules/*.md; daily flow, daily report, pending queue (cron writes to pending/); HTML report templates + index page; decision log. Lab side: scope result check and upgrade break dashboard used every day; analysis grew into L1/L2/L3 via manual root-causing → error patterns → semantic TR matching (2753 TRs).</p>
+      <p data-zh="复刻：先只做你每天真的会用的一两个功能，其余围绕它长。" data-en="Replicate: start with the one or two features you truly use every day; let the rest grow around them.">Replicate: start with the one or two features you truly use every day; let the rest grow around them.</p>
+      <span class="tag" data-zh="2026-06 – 07" data-en="2026-06 – 07">2026-06 – 07</span></div>
+    <div class="card"><div class="card-icon">②</div><h3 data-zh="阶段 2 · 记忆和方法论" data-en="Phase 2 · Memory and methodology">Phase 2 · Memory and methodology</h3>
+      <p data-zh="痛点：历史越来越多，找不到；同类错误反复犯。" data-en="Pain: history kept growing and became unfindable; the same mistakes recurred.">Pain: history kept growing and became unfindable; the same mistakes recurred.</p>
+      <p data-zh="做了：会话历史按天归档，每 7 天一次 Memory Dream（Orient → Gather → Consolidate → Prune）；workflow-patterns 成熟后升级到 discipline；kiro-doctor / validate-kiro / kiro-audit 自检；reviewer 子 agent + review-artifact.py（脚本测量，agent 判定），push 也过门禁。" data-en="Built: session history archived daily, Memory Dream every 7 days (Orient → Gather → Consolidate → Prune); workflow-patterns promoted to discipline when mature; self-checks via kiro-doctor / validate-kiro / kiro-audit; reviewer sub-agent + review-artifact.py (script measures, agent judges), with a push gate too.">Built: session history archived daily, Memory Dream every 7 days (Orient → Gather → Consolidate → Prune); workflow-patterns promoted to discipline when mature; self-checks via kiro-doctor / validate-kiro / kiro-audit; reviewer sub-agent + review-artifact.py (script measures, agent judges), with a push gate too.</p>
+      <p data-zh="复刻：pattern 文件要有上限（行数 / 条数），超了就合并或升级。" data-en="Replicate: cap pattern files (lines / entries); when over, merge or promote.">Replicate: cap pattern files (lines / entries); when over, merge or promote.</p>
+      <span class="tag" data-zh="2026-08 – 09" data-en="2026-08 – 09">2026-08 – 09</span></div>
+    <div class="card"><div class="card-icon">③</div><h3 data-zh="阶段 3 · 治理：让 agent 的动作可控" data-en="Phase 3 · Governance: keep agent actions in check">Phase 3 · Governance: keep agent actions in check</h3>
+      <p data-zh="痛点：agent 的写操作越来越多（删文件、push、改配置），只靠提示词不放心；子 agent 慢且不透明。" data-en="Pain: more and more write actions (deleting files, push, config changes) guarded only by prompts; sub-agents slow and opaque.">Pain: more and more write actions (deleting files, push, config changes) guarded only by prompts; sub-agents slow and opaque.</p>
+      <p data-zh="做了：Action gate（10-23）按 DENY / L3 / L2 / L1 / L0 分级，先 shadow 约 3 周再 enforce，L3 只能在自己终端审批；run-agent.sh 进程边界调用（10-16）+ 委托模板；启动检查进 agentSpawn hook（10-20）；拆出 kiro-pure（10-22 / 10-26），76 个框架文件两边逐字节一致。" data-en="Built: Action gate (10-23) tiered DENY / L3 / L2 / L1 / L0, shadow for about 3 weeks before enforce, L3 approved only in the user's own terminal; run-agent.sh process-boundary calls (10-16) + delegation template; startup check moved into an agentSpawn hook (10-20); kiro-pure split out (10-22 / 10-26) with 76 framework files byte-identical on both sides.">Built: Action gate (10-23) tiered DENY / L3 / L2 / L1 / L0, shadow for about 3 weeks before enforce, L3 approved only in the user's own terminal; run-agent.sh process-boundary calls (10-16) + delegation template; startup check moved into an agentSpawn hook (10-20); kiro-pure split out (10-22 / 10-26) with 76 framework files byte-identical on both sides.</p>
+      <p data-zh="复刻：hook 崩溃时 kiro-cli 会放行（fail-open），gate 必须自己处理所有异常；配置写错要加载失败（fail-closed）。" data-en="Replicate: kiro-cli lets actions through when a hook crashes (fail-open), so the gate must handle every error path; a bad config must fail to load (fail-closed).">Replicate: kiro-cli lets actions through when a hook crashes (fail-open), so the gate must handle every error path; a bad config must fail to load (fail-closed).</p>
+      <span class="tag" data-zh="2026-10" data-en="2026-10">2026-10</span></div>
+    <div class="card"><div class="card-icon">④</div><h3 data-zh="阶段 4 · 调优：降误报，软规则变硬" data-en="Phase 4 · Tuning: fewer false positives, harder rules">Phase 4 · Tuning: fewer false positives, harder rules</h3>
+      <p data-zh="痛点：gate 误报打断正常工作；有些规则写了多次仍被违反。" data-en="Pain: gate false positives interrupted normal work; some rules kept being violated despite being written down repeatedly.">Pain: gate false positives interrupted normal work; some rules kept being violated despite being written down repeatedly.</p>
+      <p data-zh="做了：变量追踪、只读命令识别、kiro-gate grant 批量审批（11-12）、自己仓库普通 push 降为 L2（11-17），每次改动回放历史命令；卡住的搜索工具规则违反 6 次 → 从 agent tools 删除；tcsh 写法反复报错 → gate 加 shell_lint（11-25）。" data-en="Built: variable tracking, read-only command detection, kiro-gate grant batch approval (11-12), plain push to own repos lowered to L2 (11-17), every change replayed against command history; a hanging-search-tool rule violated 6 times → tool removed from the agent's tools; recurring tcsh syntax errors → optional shell_lint in the gate (11-25).">Built: variable tracking, read-only command detection, kiro-gate grant batch approval (11-12), plain push to own repos lowered to L2 (11-17), every change replayed against command history; a hanging-search-tool rule violated 6 times → tool removed from the agent's tools; recurring tcsh syntax errors → optional shell_lint in the gate (11-25).</p>
+      <p data-zh="复刻：pattern 计数超过 2 还在涨，就停止补文字，去找能强制的位置（工具列表、hook、配置校验）。" data-en="Replicate: once a pattern count passes 2 and keeps rising, stop adding text and find an enforcement point (tool list, hook, config validation).">Replicate: once a pattern count passes 2 and keeps rising, stop adding text and find an enforcement point (tool list, hook, config validation).</p>
+      <span class="tag" data-zh="2026-11" data-en="2026-11">2026-11</span></div>
+    <div class="card"><div class="card-icon">↻</div><h3 data-zh="反复出现的闭环" data-en="The recurring loop">The recurring loop</h3>
+      <p data-zh="真实痛点 / 用户纠正 → 写进 workflow-patterns（带计数 + 实例）" data-en="Real pain / user correction → logged in workflow-patterns (with count + examples)">Real pain / user correction → logged in workflow-patterns (with count + examples)</p>
+      <p data-zh="→ 反复出现：升级到 discipline，或做成脚本 / 模板" data-en="→ Recurs: promote to discipline, or turn into a script / template">→ Recurs: promote to discipline, or turn into a script / template</p>
+      <p data-zh="→ 仍然违反：改成代码强制（配置 / hook / 门禁），先 shadow 再 enforce" data-en="→ Still violated: enforce in code (config / hook / gate), shadow first, then enforce">→ Still violated: enforce in code (config / hook / gate), shadow first, then enforce</p>
+      <p data-zh="→ 决策写进 decisions/（备选、理由、复盘条件）→ 演进记录由脚本从 git log 派生" data-en="→ Decision recorded in decisions/ (alternatives, rationale, review trigger) → evolution log derived from git log by script">→ Decision recorded in decisions/ (alternatives, rationale, review trigger) → evolution log derived from git log by script</p>
+      <span class="tag" data-zh="贯穿始终" data-en="Every phase">Every phase</span></div>
+  </section>
+
+  <section class="extra">
+    <h2 data-zh="5 条核心原则" data-en="5 core principles">5 core principles</h2>
+    <ol class="principles">
+      <li><strong data-zh="需求驱动，不先画架构。" data-en="Need-driven, no upfront architecture.">Need-driven, no upfront architecture.</strong><span data-zh="每个机制都对应一次真实的痛点；没有痛点的功能不做。三层分析、记忆整固、门禁都是「长出来」的。" data-en="Every mechanism maps to a real pain point; no pain, no feature. Three-layer analysis, memory consolidation and the gate all grew organically.">Every mechanism maps to a real pain point; no pain, no feature. Three-layer analysis, memory consolidation and the gate all grew organically.</span></li>
+      <li><strong data-zh="写下来才算数。" data-en="Only what is written down counts.">Only what is written down counts.</strong><span data-zh="用户纠正一次行为 → 立刻写进规则文件并提交。口头「下次注意」等于没做。" data-en="One user correction → immediately written into a rule file and committed. A verbal 'next time' means nothing was done.">One user correction → immediately written into a rule file and committed. A verbal 'next time' means nothing was done.</span></li>
+      <li><strong data-zh="文本规则反复失效 → 改成代码强制。" data-en="A text rule keeps failing → enforce it in code.">A text rule keeps failing → enforce it in code.</strong><span data-zh="规则写了还反复违反，说明靠自觉不可靠，要换成 hook / 配置 / 脚本检查。" data-en="If a written rule keeps being broken, self-discipline is not reliable; switch to a hook / config / script check.">If a written rule keeps being broken, self-discipline is not reliable; switch to a hook / config / script check.</span></li>
+      <li><strong data-zh="记录是生成的，不是记住的。" data-en="Records are generated, not remembered.">Records are generated, not remembered.</strong><span data-zh="演进记录、索引、统计都由脚本从 git log / 日志派生，不手写。" data-en="Evolution logs, indexes and stats are derived by scripts from git log / logs, never hand-written.">Evolution logs, indexes and stats are derived by scripts from git log / logs, never hand-written.</span></li>
+      <li><strong data-zh="先观察再拦截。" data-en="Observe before you block.">Observe before you block.</strong><span data-zh="任何强制机制先 shadow（只记录）跑一段时间，回放真实数据确认误报率，再切 enforce。" data-en="Any enforcement runs in shadow (log-only) first; replay real data to confirm the false-positive rate, then switch to enforce.">Any enforcement runs in shadow (log-only) first; replay real data to confirm the false-positive rate, then switch to enforce.</span></li>
+    </ol>
+  </section>
+
+  <section class="extra">
+    <h2 data-zh="复刻清单" data-en="Replication checklist">Replication checklist</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th data-zh="时间" data-en="When">When</th><th data-zh="做什么" data-en="What to do">What to do</th><th data-zh="对应文件" data-en="Files">Files</th></tr></thead>
+      <tbody>
+        <tr><td data-zh="第 1 天" data-en="Day 1">Day 1</td><td data-zh="装好 agent，写 workflow + preferences + 删除红线，上 git" data-en="Install the agent, write workflow + preferences + deletion red lines, put it in git">Install the agent, write workflow + preferences + deletion red lines, put it in git</td><td data-zh="install.sh、contexts/" data-en="install.sh, contexts/">install.sh, contexts/</td></tr>
+        <tr><td data-zh="第 1 周" data-en="Week 1">Week 1</td><td data-zh="选 1–2 个每天都做的任务做成触发词 + 规则文件" data-en="Turn 1–2 daily tasks into trigger words + rule files">Turn 1–2 daily tasks into trigger words + rule files</td><td data-zh="rules/daily-flow.md" data-en="rules/daily-flow.md">rules/daily-flow.md</td></tr>
+        <tr><td data-zh="第 1 月" data-en="Month 1">Month 1</td><td data-zh="待办队列、日报、决策日志、报告模板" data-en="Pending queue, daily report, decision log, report templates">Pending queue, daily report, decision log, report templates</td><td data-zh="pending-queue.md、decisions/、templates/" data-en="pending-queue.md, decisions/, templates/">pending-queue.md, decisions/, templates/</td></tr>
+        <tr><td data-zh="第 2–3 月" data-en="Months 2–3">Months 2–3</td><td data-zh="workflow-patterns → discipline；doctor / validate；周回顾" data-en="workflow-patterns → discipline; doctor / validate; weekly review">workflow-patterns → discipline; doctor / validate; weekly review</td><td data-zh="rules/、bin/kiro-doctor.py" data-en="rules/, bin/kiro-doctor.py">rules/, bin/kiro-doctor.py</td></tr>
+        <tr><td data-zh="开始有写操作时" data-en="When write actions start">When write actions start</td><td data-zh="gate 装上，shadow 观察，回放后 enforce" data-en="Install the gate, observe in shadow, enforce after replay">Install the gate, observe in shadow, enforce after replay</td><td data-zh="bin/gate-install.py、action-gate.md" data-en="bin/gate-install.py, action-gate.md">bin/gate-install.py, action-gate.md</td></tr>
+        <tr><td data-zh="需要分享 / 多台机器时" data-en="When sharing / multiple machines">When sharing / multiple machines</td><td data-zh="拆共享核心，overlay 放个人内容" data-en="Split out a shared core; personal content goes in overlays">Split out a shared core; personal content goes in overlays</td><td data-zh="shared-files.txt、sync-shared.sh" data-en="shared-files.txt, sync-shared.sh">shared-files.txt, sync-shared.sh</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="extra">
+    <h2 data-zh="脚本地图" data-en="Script map">Script map</h2>
+    <p class="lead" data-zh="按「什么时候用」分组。共享部分与 kiro-pure 一致；lab 专属部分只在本安装。" data-en="Grouped by when you use them. The shared part matches kiro-pure; the lab-only part exists only in this install.">Grouped by when you use them. The shared part matches kiro-pure; the lab-only part exists only in this install.</p>
+
+    <div class="map-label" data-zh="共享核心 · 6 组" data-en="Shared core · 6 groups">Shared core · 6 groups</div>
+    <div class="map-grid">
+      <div><h3 data-zh="会话生命周期" data-en="Session lifecycle">Session lifecycle</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="kiro-startup-hook.sh" data-en="kiro-startup-hook.sh">kiro-startup-hook.sh</code></td><td data-zh="agentSpawn hook：跑一次 startup-check.py，把 digest 注入上下文" data-en="agentSpawn hook: runs startup-check.py once, injects the digest">agentSpawn hook: runs startup-check.py once, injects the digest</td></tr>
+        <tr><td><code data-zh="startup-check.py" data-en="startup-check.py">startup-check.py</code></td><td data-zh="日报完整性、pending 队列、日历提醒、push 队列" data-en="Daily-report completeness, pending queue, calendar reminders, push queue">Daily-report completeness, pending queue, calendar reminders, push queue</td></tr>
+        <tr><td><code data-zh="daily-summary-extract.py" data-en="daily-summary-extract.py">daily-summary-extract.py</code></td><td data-zh="把 session 文件抽成带标签的 JSON，供 LLM 写日报" data-en="Extracts sessions into tagged JSON for the LLM-written daily report">Extracts sessions into tagged JSON for the LLM-written daily report</td></tr>
+        <tr><td><code data-zh="kiro-closeout.py" data-en="kiro-closeout.py">kiro-closeout.py</code></td><td data-zh="收工：分类未提交改动、生成 commit message、更新 What's New" data-en="Close-out: classify uncommitted changes, draft commit message, update What's New">Close-out: classify uncommitted changes, draft commit message, update What's New</td></tr>
+        <tr><td><code data-zh="auto-archive.sh" data-en="auto-archive.sh">auto-archive.sh</code></td><td data-zh="session &gt;15 天打包 + 日志轮转（cron，每周）" data-en="Packs sessions older than 15 days + log rotation (weekly cron)">Packs sessions older than 15 days + log rotation (weekly cron)</td></tr>
+        <tr><td><code data-zh="kiro-archive" data-en="kiro-archive">kiro-archive</code></td><td data-zh="单文件版本归档（v1/v2…），已大多被 git 取代" data-en="Single-file version archive (v1/v2…), mostly superseded by git">Single-file version archive (v1/v2…), mostly superseded by git</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="自检与维护" data-en="Self-check &amp; maintenance">Self-check &amp; maintenance</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="kiro-doctor.py" data-en="kiro-doctor.py">kiro-doctor.py</code></td><td data-zh="运行健康：规则行数、pattern 数、tip 大小、INDEX 完整性" data-en="Runtime health: rule lines, pattern count, tip size, INDEX integrity">Runtime health: rule lines, pattern count, tip size, INDEX integrity</td></tr>
+        <tr><td><code data-zh="validate-kiro.py" data-en="validate-kiro.py">validate-kiro.py</code></td><td data-zh="结构校验：引用、注册、孤儿 md" data-en="Structure check: references, registration, orphan md files">Structure check: references, registration, orphan md files</td></tr>
+        <tr><td><code data-zh="kiro-audit.py" data-en="kiro-audit.py">kiro-audit.py</code></td><td data-zh="带 ID 的可处理发现（可 ignore + note）" data-en="Actionable findings with IDs (ignorable with a note)">Actionable findings with IDs (ignorable with a note)</td></tr>
+        <tr><td><code data-zh="check-drift.sh" data-en="check-drift.sh">check-drift.sh</code></td><td data-zh="契约文件内容哈希漂移" data-en="Content-hash drift of contract files">Content-hash drift of contract files</td></tr>
+        <tr><td><code data-zh="gen-agent-evolution.py" data-en="gen-agent-evolution.py">gen-agent-evolution.py</code></td><td data-zh="从 git log + decisions + patterns 生成每个 agent 的演进记录" data-en="Per-agent evolution log from git log + decisions + patterns">Per-agent evolution log from git log + decisions + patterns</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="质量门禁与发布" data-en="Quality gate &amp; publishing">Quality gate &amp; publishing</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="review-artifact.py" data-en="review-artifact.py">review-artifact.py</code></td><td data-zh="统一质检：html/log/text/push profile，硬门禁 + 读数" data-en="Unified QA: html/log/text/push profiles, hard gates + readings">Unified QA: html/log/text/push profiles, hard gates + readings</td></tr>
+        <tr><td><code data-zh="push-queue.py" data-en="push-queue.py">push-queue.py</code></td><td data-zh="两个延期队列：time（等时间窗）/ quality（等修好）" data-en="Two deferral queues: time (wait for window) / quality (wait for fix)">Two deferral queues: time (wait for window) / quality (wait for fix)</td></tr>
+        <tr><td><code data-zh="style_registry.py" data-en="style_registry.py">style_registry.py</code></td><td data-zh="合并模板注册表与本地 overlay" data-en="Merges the template registry with the local overlay">Merges the template registry with the local overlay</td></tr>
+        <tr><td><code data-zh="generate-card-svg.py / render-kiro-cover.py" data-en="generate-card-svg.py / render-kiro-cover.py">generate-card-svg.py / render-kiro-cover.py</code></td><td data-zh="index 卡片装饰 SVG / 封面图（确定性，按 seed）" data-en="Index card SVG / cover image (deterministic, seeded)">Index card SVG / cover image (deterministic, seeded)</td></tr>
+        <tr><td><code data-zh="md-to-pdf.py" data-en="md-to-pdf.py">md-to-pdf.py</code></td><td data-zh="Markdown → PDF" data-en="Markdown → PDF">Markdown → PDF</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="子 agent" data-en="Sub-agents">Sub-agents</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="run-agent.sh" data-en="run-agent.sh">run-agent.sh</code></td><td data-zh="进程边界调用子 agent：标准输入、机器可读 stdout、超时" data-en="Process-boundary sub-agent call: stdin, machine-readable stdout, timeout">Process-boundary sub-agent call: stdin, machine-readable stdout, timeout</td></tr>
+        <tr><td><code data-zh="agent-trace.py" data-en="agent-trace.py">agent-trace.py</code></td><td data-zh="4 个 hook 事件记时；慢轮次提示；子 agent 工具预算刹车" data-en="Times 4 hook events; slow-turn hints; sub-agent tool-budget brake">Times 4 hook events; slow-turn hints; sub-agent tool-budget brake</td></tr>
+        <tr><td><code data-zh="agent-perf.py" data-en="agent-perf.py">agent-perf.py</code></td><td data-zh="合并 runs + session + gate 日志 → 每次运行耗时 / 轮次 / 超预算" data-en="Merges runs + session + gate logs → per-run time / turns / over-budget">Merges runs + session + gate logs → per-run time / turns / over-budget</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="Action gate" data-en="Action gate">Action gate</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="action-gate.py" data-en="action-gate.py">action-gate.py</code></td><td data-zh="preToolUse hook：DENY/L3/L2/L1/L0 分级，可选 shell_lint" data-en="preToolUse hook: DENY/L3/L2/L1/L0 tiers, optional shell_lint">preToolUse hook: DENY/L3/L2/L1/L0 tiers, optional shell_lint</td></tr>
+        <tr><td><code data-zh="gate-install.py" data-en="gate-install.py">gate-install.py</code></td><td data-zh="给 agent 配置装 / 卸 gate + trace hook" data-en="Installs / removes gate + trace hooks in agent configs">Installs / removes gate + trace hooks in agent configs</td></tr>
+        <tr><td><code data-zh="kiro-gate" data-en="kiro-gate">kiro-gate</code></td><td data-zh="用户 CLI：approve / grant / list / tail / stats / mode / apply（只在自己终端）" data-en="User CLI: approve / grant / list / tail / stats / mode / apply (own terminal only)">User CLI: approve / grant / list / tail / stats / mode / apply (own terminal only)</td></tr>
+        <tr><td><code data-zh="gate-audit.py" data-en="gate-audit.py">gate-audit.py</code></td><td data-zh="决策日志 → relax / tighten 提案（不改策略）" data-en="Decision log → relax / tighten proposals (never edits policy)">Decision log → relax / tighten proposals (never edits policy)</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="多安装同步" data-en="Multi-install sync">Multi-install sync</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="sync-shared.sh" data-en="sync-shared.sh">sync-shared.sh</code></td><td data-zh="按 shared-files.txt 在两个安装间 status / pull / push" data-en="status / pull / push between installs per shared-files.txt">status / pull / push between installs per shared-files.txt</td></tr>
+        <tr><td><code data-zh="scripts/leak-check.sh" data-en="scripts/leak-check.sh">scripts/leak-check.sh</code></td><td data-zh="pre-commit / pre-push 泄漏扫描" data-en="pre-commit / pre-push leak scan">pre-commit / pre-push leak scan</td></tr>
+        <tr><td><code data-zh="lib/kiro_paths.py / lib/paths.sh" data-en="lib/kiro_paths.py / lib/paths.sh">lib/kiro_paths.py / lib/paths.sh</code></td><td data-zh="路径与配置加载（paths.env + local.env）" data-en="Path and config loading (paths.env + local.env)">Path and config loading (paths.env + local.env)</td></tr>
+      </tbody></table></div></div>
+    </div>
+
+    <div class="map-label lab" data-zh="Lab 专属 · 18 个脚本 · 4 组" data-en="Lab-only · 18 scripts · 4 groups">Lab-only · 18 scripts · 4 groups</div>
+    <div class="map-grid">
+      <div><h3 data-zh="日志分析流水线" data-en="Log-analysis pipeline">Log-analysis pipeline</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="batch-job-report.py" data-en="batch-job-report.py">batch-job-report.py</code></td><td data-zh="批量 CI 测试 job → 每 job HTML + 汇总 xlsx" data-en="Batch CI test jobs → per-job HTML + summary xlsx">Batch CI test jobs → per-job HTML + summary xlsx</td></tr>
+        <tr><td><code data-zh="batch-llm-analyze.py" data-en="batch-llm-analyze.py">batch-llm-analyze.py</code></td><td data-zh="多个 case 的 log extract 合成一个 LLM 请求" data-en="Combines many cases' log extracts into one LLM request">Combines many cases' log extracts into one LLM request</td></tr>
+        <tr><td><code data-zh="batch-analysis-server.py" data-en="batch-analysis-server.py">batch-analysis-server.py</code></td><td data-zh="批量 log analysis 的 Web UI" data-en="Web UI for batch log analysis">Web UI for batch log analysis</td></tr>
+        <tr><td><code data-zh="orchestrate-log-analysis.py" data-en="orchestrate-log-analysis.py">orchestrate-log-analysis.py</code></td><td data-zh="编排 MVP：确定性分诊，决定哪些 case 进 L3" data-en="Orchestration MVP: deterministic triage, decides which cases go to L3">Orchestration MVP: deterministic triage, decides which cases go to L3</td></tr>
+        <tr><td><code data-zh="auto-pattern-extract.py" data-en="auto-pattern-extract.py">auto-pattern-extract.py</code></td><td data-zh="从 L3 输出生成候选 pattern，人工确认再转正" data-en="Generates candidate patterns from L3 output, promoted after human review">Generates candidate patterns from L3 output, promoted after human review</td></tr>
+        <tr><td><code data-zh="build-tr-embeddings.py" data-en="build-tr-embeddings.py">build-tr-embeddings.py</code></td><td data-zh="拉取历史缺陷单建 embedding 索引" data-en="Fetches historical defect reports and builds the embedding index">Fetches historical defect reports and builds the embedding index</td></tr>
+        <tr><td><code data-zh="validator.py" data-en="validator.py">validator.py</code></td><td data-zh="统一校验（log-analysis 结果等）" data-en="Unified validation (log-analysis results, etc.)">Unified validation (log-analysis results, etc.)</td></tr>
+        <tr><td><code data-zh="upgrade-case-analyze.sh" data-en="upgrade-case-analyze.sh">upgrade-case-analyze.sh</code></td><td data-zh="单个升级测试 job：首个失败 step + counter 检查 + 首个 Assertion" data-en="Single upgrade-test job: first failing step + counter check + first assertion">Single upgrade-test job: first failing step + counter check + first assertion</td></tr>
+        <tr><td><code data-zh="suite-tc-locate.sh" data-en="suite-tc-locate.sh">suite-tc-locate.sh</code></td><td data-zh="在 suite run 里定位某 TC 的子目录" data-en="Locates a TC's subdirectory inside a suite run">Locates a TC's subdirectory inside a suite run</td></tr>
+        <tr><td><code data-zh="rerun.py" data-en="rerun.py">rerun.py</code></td><td data-zh="在 CI 测试系统重跑失败 job（自动识别失败 case）" data-en="Reruns failed CI test jobs (auto-detects failed cases)">Reruns failed CI test jobs (auto-detects failed cases)</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="环境与指标" data-en="Environment &amp; metrics">Environment &amp; metrics</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="ddb-pm-query.sh" data-en="ddb-pm-query.sh">ddb-pm-query.sh</code></td><td data-zh="不解包直接查 DDB 诊断包里的 PM counter" data-en="Queries PM counters in a DDB diagnostic bundle without unpacking">Queries PM counters in a DDB diagnostic bundle without unpacking</td></tr>
+        <tr><td><code data-zh="prom_mm_cpu.py" data-en="prom_mm_cpu.py">prom_mm_cpu.py</code></td><td data-zh="Prometheus 快查 MM CPU" data-en="Quick Prometheus lookup of MM CPU">Quick Prometheus lookup of MM CPU</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="TR ↔ TC 覆盖" data-en="TR ↔ TC coverage">TR ↔ TC coverage</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="pctr-fetch.py" data-en="pctr-fetch.py">pctr-fetch.py</code></td><td data-zh="JQL 导出 PCTR（默认近 365 天客户发现的 SM TR）" data-en="Exports PCTRs via JQL (default: customer-found SM TRs, last 365 days)">Exports PCTRs via JQL (default: customer-found SM TRs, last 365 days)</td></tr>
+        <tr><td><code data-zh="tc-query.py" data-en="tc-query.py">tc-query.py</code></td><td data-zh="基于 query-index.json 查 tc-card 批次" data-en="Queries tc-card batches via query-index.json">Queries tc-card batches via query-index.json</td></tr>
+      </tbody></table></div></div>
+      <div><h3 data-zh="Kiro Lab 站点与启动" data-en="Kiro Lab site &amp; launch">Kiro Lab site &amp; launch</h3><div class="tbl-wrap"><table><tbody>
+        <tr><td><code data-zh="kiro-lab-launch.sh" data-en="kiro-lab-launch.sh">kiro-lab-launch.sh</code></td><td data-zh="从 .env 载入凭据再启动 kiro-cli" data-en="Loads credentials from .env, then starts kiro-cli">Loads credentials from .env, then starts kiro-cli</td></tr>
+        <tr><td><code data-zh="gen-welcome.py" data-en="gen-welcome.py">gen-welcome.py</code></td><td data-zh="按当前子 agent + 触发词重新生成 welcomeMessage" data-en="Regenerates welcomeMessage from current sub-agents + triggers">Regenerates welcomeMessage from current sub-agents + triggers</td></tr>
+        <tr><td><code data-zh="kiro-lab-verify.py" data-en="kiro-lab-verify.py">kiro-lab-verify.py</code></td><td data-zh="部署前检查报告 HTML（kiro-base.css、nav 等）" data-en="Pre-deploy check of report HTML (kiro-base.css, nav, etc.)">Pre-deploy check of report HTML (kiro-base.css, nav, etc.)</td></tr>
+        <tr><td><code data-zh="kiro-lab-collector.py" data-en="kiro-lab-collector.py">kiro-lab-collector.py</code></td><td data-zh="Pages 访问统计 HTTPS beacon 收集器（JSONL）" data-en="HTTPS beacon collector for Pages visit stats (JSONL)">HTTPS beacon collector for Pages visit stats (JSONL)</td></tr>
+      </tbody></table></div></div>
+    </div>
+  </section>
+
+  <section class="extra">
+    <h2 data-zh="踩过的坑（不美化）" data-en="Pitfalls (unvarnished)">Pitfalls (unvarnished)</h2>
+    <ul class="pitfalls">
+      <li><b data-zh="两个同名规则目录并存" data-en="Two rule directories with the same name">Two rule directories with the same name</b> <span data-zh="→ 启动检查读错目录，误判文件丢失。旧文件要及时清。" data-en="→ the startup check read the wrong one and reported missing files. Clean up old files promptly.">→ the startup check read the wrong one and reported missing files. Clean up old files promptly.</span></li>
+      <li><b data-zh="用正则批量改 HTML" data-en="Bulk-editing HTML with regex">Bulk-editing HTML with regex</b> <span data-zh="→ 跨标签替换破坏了 60 个 a 和 17 个 div 闭合标签。HTML 逐处编辑，改完校验结构。" data-en="→ cross-tag replacement broke 60 a and 17 div closing tags. Edit HTML one spot at a time and validate structure afterwards.">→ cross-tag replacement broke 60 a and 17 div closing tags. Edit HTML one spot at a time and validate structure afterwards.</span></li>
+      <li><b data-zh="脚本只做一半流程" data-en="A script that does half the flow">A script that does half the flow</b> <span data-zh="→ 更新了列表但没插卡片，依赖「我记得手动补」，结果漏了。把整条发布流程收进一个脚本。" data-en="→ it updated the list but never inserted the card; relying on 'I'll remember to do it by hand' failed. Put the whole publish flow in one script.">→ it updated the list but never inserted the card; relying on 'I'll remember to do it by hand' failed. Put the whole publish flow in one script.</span></li>
+      <li><b data-zh="报告里的数字靠模型写" data-en="Report numbers written by the model">Report numbers written by the model</b> <span data-zh="→ 出现编造的统计。数字必须由脚本算出再填进模板。" data-en="→ fabricated stats appeared. Numbers must be computed by scripts, then filled into templates.">→ fabricated stats appeared. Numbers must be computed by scripts, then filled into templates.</span></li>
+      <li><b data-zh="从共享核心反向 push" data-en="Pushing back from the shared core">Pushing back from the shared core</b> <span data-zh="→ 覆盖了上游较新的修复。定死方向：上游改，下游 pull。" data-en="→ overwrote newer upstream fixes. Fix the direction: change upstream, pull downstream.">→ overwrote newer upstream fixes. Fix the direction: change upstream, pull downstream.</span></li>
+      <li><b data-zh="hook 默认 fail-open、工具名因客户端而异" data-en="Hooks fail open by default; tool names vary by client">Hooks fail open by default; tool names vary by client</b> <span data-zh="→ 门禁要按实际收到的 tool_name 测试，不要只按文档里的名字。" data-en="→ test the gate against the tool_name actually received, not just the documented name.">→ test the gate against the tool_name actually received, not just the documented name.</span></li>
+    </ul>
+  </section>
+
+  <a class="fancy-btn" href="../index.html" data-zh="返回 kiro-pure 首页 →" data-en="Back to kiro-pure home →">Back to kiro-pure home →</a>
+</main>
+
+<footer data-zh="生成于 2026-11-25 · kiro-pure" data-en="Generated 2026-11-25 · kiro-pure">Generated 2026-11-25 · kiro-pure</footer>
+
+<script>
+function switchLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.nav-controls button').forEach(b => b.classList.remove('active'));
+  document.getElementById(lang === 'zh-CN' ? 'btnZh' : 'btnEn').classList.add('active');
+  const zh = lang === 'zh-CN';
+  document.querySelectorAll('[data-zh]').forEach(el => { el.innerHTML = zh ? el.getAttribute('data-zh') : el.getAttribute('data-en'); });
+}
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cards = [...document.querySelectorAll('.card')];
+  cards.forEach((c, i) => {
+    c.style.setProperty('--i', i);
+    // the entrance animation owns `transform`; release it so the tilt below can take over
+    const ready = () => c.classList.add('ready');
+    if (reduce) ready(); else c.addEventListener('animationend', ready, { once: true });
+  });
+  if (reduce) return;
+
+  const glow = document.getElementById('sdGlow');
+  let raf = 0, x = 0, y = 0, card = null;
+  document.addEventListener('mousemove', e => {
+    x = e.clientX; y = e.clientY;
+    const hit = e.target.closest && e.target.closest('.card');
+    if (card && card !== hit) { card.style.removeProperty('--mx'); card.style.removeProperty('--my'); card.style.transform = ''; }
+    card = hit;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {        // one listener, one paint per frame, latest position
+      raf = 0;
+      glow.style.opacity = '1';
+      glow.style.left = x + 'px'; glow.style.top = y + 'px';
+      if (!card || !card.classList.contains('ready')) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (x - r.left) + 'px');
+      card.style.setProperty('--my', (y - r.top) + 'px');
+      const rx = (-(y - r.top - r.height / 2) / r.height * 16).toFixed(2);
+      const ry = ((x - r.left - r.width / 2) / r.width * 16).toFixed(2);
+      card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02,1.02,1.02)`;
+    });
+  });
+  document.documentElement.addEventListener('mouseleave', () => {
+    glow.style.opacity = '0';
+    if (card) { card.style.removeProperty('--mx'); card.style.removeProperty('--my'); card.style.transform = ''; card = null; }
+  });
+})();
+</script>
+</body>
+</html>

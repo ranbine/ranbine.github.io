@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiro Lab Permissions: Three Checkpoints — action gate tech note</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --ivory:#FAF9F5; --paper:#FFFFFF; --slate:#141413;
+  --clay:#D97757; --clay-d:#B85C3E; --clay-light:#F4E0D9;
+  --olive:#788C5D; --olive-light:#E8F0DE;
+  --amber:#B8860B; --amber-light:#FDF3D7;
+  --red:#C44B4B; --red-light:#FCE8E8;
+  --blue:#4B7BC4; --blue-light:#E3F2FD;
+  --g100:#F0EEE6; --g200:#E6E3DA; --g300:#D1CFC5; --g500:#87867F; --g700:#3D3D3A;
+  --serif:ui-serif,Georgia,"Times New Roman",Times,serif;
+  --sans:Roboto,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"Roboto Mono",ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace;
+  --max-w:980px; --radius:8px;
+  --kb-bg:var(--ivory); --kb-surface:var(--paper); --kb-text:var(--slate);
+  --kb-text-s:var(--g700); --kb-text-m:var(--g500); --kb-accent:var(--clay); --kb-border:var(--g300);
+}
+[data-theme="dark"]{--ivory:#1a1a2e;--paper:#16213e;--slate:#e0e0e0;--g100:#1e1e3a;--g200:#2a2a4a;--g300:#3a3a5a;--g500:#a0a0a0;--g700:#c0c0c0;--clay-light:#3d2520;--olive-light:#1e2e1a;--amber-light:#2e2510;--red-light:#2e1a1a;--blue-light:#1a2535;}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.6;transition:background .2s,color .2s;}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--clay);z-index:9999;width:0%;transition:width .1s;}
+.wrap{max-width:var(--max-w);margin:0 auto;padding:0 32px 80px;}
+header{padding:48px 0 28px;border-bottom:1.5px solid var(--g300);margin-bottom:32px;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.eyebrow::before{content:"";width:24px;height:1.5px;background:var(--clay);}
+h1{font-family:var(--serif);font-weight:500;font-size:32px;line-height:1.2;margin:0 0 8px;}
+.meta{font-family:var(--mono);font-size:12px;color:var(--g500);}
+.intro{font-size:15px;color:var(--g700);margin-top:12px;max-width:720px;}
+section{margin-bottom:52px;}
+h2{font-family:var(--serif);font-size:22px;font-weight:500;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--g200);}
+h3{font-size:15px;font-weight:600;margin:18px 0 8px;}
+p,li{font-size:14px;color:var(--g700);}
+.lead{font-size:14px;color:var(--g700);margin-bottom:16px;}
+code{font-family:var(--mono);font-size:12px;background:var(--g100);padding:2px 6px;border-radius:3px;}
+.note{border-left:3px solid var(--clay);padding:10px 16px;background:var(--clay-light);border-radius:0 var(--radius) var(--radius) 0;font-size:13px;margin:14px 0;}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+.tbl th{background:var(--g100);text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--g300);}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--g200);vertical-align:top;color:var(--g700);}
+.tbl td:first-child{white-space:nowrap;font-weight:600;color:var(--slate);}
+.chip{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;}
+.c-deny{background:var(--red-light);color:var(--red);border:1px solid var(--red);}
+.c-l3{background:var(--clay-light);color:var(--clay-d);border:1px solid var(--clay);}
+.c-l2{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber);}
+.c-l1{background:var(--olive-light);color:var(--olive);border:1px solid var(--olive);}
+.c-l0{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue);}
+.c-live{background:var(--amber-light);color:var(--amber);}
+
+/* journey */
+.journey{display:flex;align-items:stretch;flex-wrap:wrap;gap:6px 0;margin:18px 0;}
+.step{flex:1 1 120px;background:var(--paper);border:1.5px solid var(--g300);border-radius:10px;padding:12px 12px;min-width:120px;}
+.step .n{font-family:var(--mono);font-size:10.5px;color:var(--clay);font-weight:700;letter-spacing:.06em;}
+.step .t{font-weight:600;font-size:13px;margin:4px 0;}
+.step .d{font-size:11.5px;color:var(--g500);line-height:1.45;}
+.step.end{border-color:var(--clay);background:var(--clay-light);}
+.jarrow{display:flex;align-items:center;padding:0 6px;color:var(--clay);font-size:16px;}
+
+/* approval card */
+.card{background:var(--paper);border:1.5px solid var(--clay);border-radius:12px;padding:18px 22px;margin:14px 0;}
+.card ol{margin:8px 0 0;padding-left:20px;}
+.card li{margin:4px 0;}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0;}
+.stat{background:var(--paper);border:1.5px solid var(--g300);border-radius:10px;padding:14px 16px;}
+.stat .v{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--slate);}
+.stat .l{font-size:12px;color:var(--g500);}
+.sbar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--g300);margin:10px 0 8px;}
+.sbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--g700);}
+.legend span i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+
+/* history */
+.hist{display:flex;gap:6px;align-items:flex-end;height:90px;margin:12px 0 4px;}
+.hist div{flex:1;background:var(--clay);border-radius:4px 4px 0 0;position:relative;min-height:3px;}
+.hist div span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:var(--g700);}
+.hist div.zero{background:var(--olive);}
+.histlbl{display:flex;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--g500);}
+.histlbl span{flex:1;text-align:center;}
+
+/* limits */
+.limits{border:1.5px dashed var(--amber);background:var(--amber-light);border-radius:12px;padding:14px 22px;}
+.limits li{margin:6px 0;}
+
+/* code block */
+.codebox{position:relative;background:var(--g100);border:1px solid var(--g300);border-radius:10px;margin:12px 0;}
+.codebox pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:12.5px;line-height:1.7;overflow-x:auto;color:var(--slate);}
+.codebox pre .cm{color:var(--g500);}
+.copy-btn{position:absolute;top:8px;right:8px;border:1.5px solid var(--g300);background:var(--paper);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--g700);font-family:var(--sans);}
+.copy-btn:hover{background:var(--clay);color:#fff;border-color:var(--clay);}
+
+footer{margin-top:60px;border-top:1.5px solid var(--g300);padding-top:20px;font-size:13px;color:var(--g500);text-align:center;}
+[lang="en"] .zh{display:none;} [lang="zh-CN"] .en{display:none;}
+@media(max-width:720px){.stats{grid-template-columns:1fr 1fr;} .jarrow{transform:rotate(90deg);width:100%;justify-content:center;padding:2px 0;} .step{flex-basis:100%;}}
+.cases{display:grid;grid-template-columns:230px 1fr;gap:16px;margin:18px 0;}
+.case-list{display:flex;flex-direction:column;gap:6px;}
+.case-btn{text-align:left;border:1.5px solid var(--g300);background:var(--paper);border-radius:10px;padding:9px 12px;cursor:pointer;font:inherit;font-size:13px;color:var(--slate);display:flex;gap:8px;align-items:center;transition:all .15s;}
+.case-btn:hover{border-color:var(--clay);}
+.case-btn.active{border-color:var(--clay);background:var(--clay-light);}
+.case-btn .chip{flex:0 0 auto;min-width:46px;text-align:center;}
+.case-panel{border:1.5px solid var(--g300);border-radius:12px;background:var(--paper);padding:18px 20px;}
+.case-panel .cmeta{font-family:var(--mono);font-size:11.5px;color:var(--g500);margin-bottom:10px;}
+.case-panel h3{margin:0 0 6px;font-size:17px;}
+.trace{list-style:none;padding:0;margin:14px 0;border-left:2px solid var(--g300);}
+.trace li{position:relative;padding:6px 0 8px 18px;font-size:13.5px;opacity:0;transform:translateX(-6px);transition:opacity .35s,transform .35s;}
+.trace li.on{opacity:1;transform:none;}
+.trace li::before{content:"";position:absolute;left:-6px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--g300);}
+.trace li.on::before{background:var(--clay);}
+.trace .k{display:inline-block;min-width:84px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--g500);}
+.trace code{font-size:12.5px;word-break:break-all;}
+.outcome{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+.outcome div{border-radius:10px;padding:10px 12px;font-size:13px;background:var(--g100);}
+.outcome b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--g500);margin-bottom:4px;}
+.outcome pre{margin:6px 0 0;white-space:pre-wrap;font-size:11.5px;background:var(--paper);border:1px solid var(--g200);border-radius:6px;padding:6px 8px;}
+.takeaway{margin-top:12px;font-size:13px;border-left:3px solid var(--olive);padding:6px 12px;background:var(--olive-light);border-radius:0 8px 8px 0;}
+.takeaway.fp{border-color:var(--amber);background:var(--amber-light);}
+.replay-btn{margin-top:10px;border:1.5px solid var(--g300);background:var(--paper);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--g700);}
+@media(max-width:760px){.cases{grid-template-columns:1fr;}.outcome{grid-template-columns:1fr;}}
+</style>
+<link rel="stylesheet" href="../kiro-base.css">
+</head>
+<body>
+<nav class="kiro-nav">
+  <a href="../index.html" class="brand"><i class="fas fa-bolt"></i> kiro-pure</a>
+  <div class="nav-controls">
+    <button onclick="switchLang('zh-CN')" class="active" id="btnZh">中文</button>
+    <button onclick="switchLang('en')" id="btnEn">EN</button>
+    <button onclick="toggleTheme()" id="btnTheme"><i class="fas fa-moon"></i></button>
+    <a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="zh">技术说明</span><span class="en">Tech Note</span></div>
+    <h1><span class="zh">Kiro Lab 权限机制：三道关</span><span class="en">Kiro Lab Permissions: Three Checkpoints</span></h1>
+    <div class="meta">2026-10-23 · <code>bin/action-gate.py</code> · <code>contexts/rules/gate-policy.json</code></div>
+    <p class="intro">
+      <span class="zh">workflow.md 里写的红线只能约束模型「想不想做」；action gate 在执行那一刻用代码检查「能不能做」。这一页讲清楚一次动作如何过关、风险怎么分级、L3 如何审批、规则每周如何演进，以及它做不到什么。</span>
+      <span class="en">The Red Lines written in workflow.md only constrain what the model intends to do; the action gate enforces them in code at execution time. This page covers how one action passes the gate, how risk is tiered, how L3 approval works, how the rules evolve weekly, and what the gate cannot do.</span>
+    </p>
+  </header>
+
+  <!-- 1. WHY -->
+  <section id="why">
+    <h2><span class="zh">① 为什么需要代码层的关卡</span><span class="en">① Why a gate in code</span></h2>
+    <p class="lead"><span class="zh">文字规则靠模型自觉，出错时没有任何东西拦住它。gate 挂在 kiro-cli 的 <code>preToolUse</code> hook 上，在工具真正执行前做决定。先在 kiro-cli 2.26 上实测了 hook 的行为：</span><span class="en">Written rules rely on the model behaving; when it slips, nothing stops it. The gate sits on kiro-cli's <code>preToolUse</code> hook and decides before the tool actually runs. The hook behavior was measured first on kiro-cli 2.26:</span></p>
+    <table class="tbl">
+      <tr><th><span class="zh">实测项</span><span class="en">Probe</span></th><th><span class="zh">结果</span><span class="en">Result</span></th></tr>
+      <tr><td><span class="zh">hook 收到什么</span><span class="en">Hook input</span></td><td><span class="zh">原始 <code>tool_name</code> + <code>tool_input</code></span><span class="en">raw <code>tool_name</code> + <code>tool_input</code></span></td></tr>
+      <tr><td><span class="zh">如何拦截</span><span class="en">Blocking</span></td><td><span class="zh"><code>exit 2</code> 阻止执行，stderr 原样返回给模型</span><span class="en"><code>exit 2</code> blocks; stderr goes back to the model</span></td></tr>
+      <tr><td><span class="zh">hook 崩溃 / 超时</span><span class="en">Hook crash / timeout</span></td><td><span class="chip c-deny">FAIL-OPEN</span> <span class="zh">工具照常执行</span><span class="en">the tool still runs</span></td></tr>
+    </table>
+    <div class="note"><span class="zh"><strong>结论：</strong>不能依赖 CLI 兜底。gate 脚本自己处理每一条失败路径 —— enforce 模式下任何异常都按拒绝处理（fail-closed）。</span><span class="en"><strong>Takeaway:</strong> the CLI is no safety net. The gate script handles every failure path itself — in enforce mode any internal error is treated as a block (fail-closed).</span></div>
+  </section>
+
+  <!-- 2. THREE CHECKPOINTS -->
+  <section id="checkpoints">
+    <h2><span class="zh">② 三道关</span><span class="en">② Three checkpoints</span></h2>
+    <table class="tbl">
+      <tr><th><span class="zh">关卡</span><span class="en">Checkpoint</span></th><th><span class="zh">时机</span><span class="en">When</span></th><th><span class="zh">问的问题</span><span class="en">Question</span></th><th><span class="zh">实现</span><span class="en">Implementation</span></th><th><span class="zh">状态</span><span class="en">Status</span></th></tr>
+      <tr><td><i class="fas fa-shield-halved"></i> Gate</td><td><span class="zh">执行前</span><span class="en">before execution</span></td><td><span class="zh">该不该跑？</span><span class="en">Should this run?</span></td><td><code>bin/action-gate.py</code> hook + <code>contexts/rules/gate-policy.json</code></td><td><span class="chip c-live"><span class="zh">已上线 · shadow</span><span class="en">live · shadow</span></span></td></tr>
+      <tr><td><i class="fas fa-clipboard-check"></i> Reviewer</td><td><span class="zh">产出后</span><span class="en">after output</span></td><td><span class="zh">够不够好？</span><span class="en">Good enough?</span></td><td><span class="zh">reviewer agent（脚本兜底 + agent 判断）</span><span class="en">reviewer agent (script floor + agent judgement)</span></td><td><span class="zh">bin/rules/agents 改动现在必须过 code review</span><span class="en">code review now mandatory for bin/rules/agents changes</span></td></tr>
+      <tr><td><i class="fas fa-scale-balanced"></i> Auditor</td><td><span class="zh">每周</span><span class="en">weekly</span></td><td><span class="zh">规则该不该改？</span><span class="en">Should the rules change?</span></td><td><code>bin/gate-audit.py</code> → reviewer → <span class="zh">用户</span><span class="en">user</span> <code>kiro-gate apply</code></td><td><span class="zh">每周回顾中运行</span><span class="en">runs in weekly review</span></td></tr>
+    </table>
+  </section>
+
+  <!-- 3. JOURNEY -->
+  <section id="journey">
+    <h2><span class="zh">③ 一次动作的旅程</span><span class="en">③ Journey of one action</span></h2>
+    <div class="journey">
+      <div class="step"><div class="n">01</div><div class="t">tool call</div><div class="d"><span class="zh">模型发起工具调用</span><span class="en">model issues a tool call</span></div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step"><div class="n">02</div><div class="t">matcher</div><div class="d"><span class="zh">只挂 shell/write/delegate/MCP；read/grep/glob 不经过 gate = 零开销</span><span class="en">only shell/write/delegate/MCP hooked; read/grep/glob never pass = zero cost</span></div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step"><div class="n">03</div><div class="t">strip purpose</div><div class="d"><span class="zh">去掉 <code>__tool_use_purpose</code>，模型的自我辩解不参与判断</span><span class="en">drop <code>__tool_use_purpose</code>; the model's own justification is ignored</span></div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step"><div class="n">04</div><div class="t">split shell</div><div class="d"><code>;</code> <code>&amp;&amp;</code> <code>|</code> <code>$( )</code> <span class="zh">反引号</span><span class="en">backticks</span> <code>bash -c</code> heredoc <code>cd</code></div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step"><div class="n">05</div><div class="t">classify</div><div class="d">DENY &gt; L3 &gt; L0 &gt; L1 &gt; <span class="zh">其余</span><span class="en">else</span> L2</div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step"><div class="n">06</div><div class="t">log</div><div class="d"><code>data/gate/decisions-*.jsonl</code></div></div>
+      <div class="jarrow"><i class="fas fa-angle-right"></i></div>
+      <div class="step end"><div class="n">07</div><div class="t">verdict</div><div class="d"><span class="zh">shadow：一律放行 + 记录；enforce：拦截 DENY/L3</span><span class="en">shadow: always allow + log; enforce: block DENY/L3</span></div></div>
+    </div>
+    <p><span class="zh">复合命令拆段后逐段分级，<strong>风险最高的一段决定结果</strong>，后面的安全段不能把前面的高风险段拉低。</span><span class="en">Compound commands are split and each segment classified; <strong>the riskiest segment decides</strong>, and a later safe segment can never lower an earlier risky one.</span></p>
+  </section>
+
+  <!-- 4. FIVE LEVELS -->
+  <section id="levels">
+    <h2><span class="zh">④ 五个等级</span><span class="en">④ Five levels</span></h2>
+    <table class="tbl">
+      <tr><th><span class="zh">等级</span><span class="en">Level</span></th><th><span class="zh">典型动作</span><span class="en">Typical actions</span></th><th><span class="zh">结果</span><span class="en">Outcome</span></th></tr>
+      <tr><td><span class="chip c-deny">DENY</span></td><td><span class="zh">agent 调用 <code>kiro-gate approve/mode/apply</code>；修改 gate/policy/agent 配置或 <code>cli.json</code>；删除白名单外的路径</span><span class="en">agent calls <code>kiro-gate approve/mode/apply</code>; edits gate/policy/agent configs or <code>cli.json</code>; deletes paths outside the allow-list</span></td><td><span class="zh">拒绝，不可审批</span><span class="en">refused, cannot be approved</span></td></tr>
+      <tr><td><span class="chip c-l3">L3</span></td><td><span class="zh">删除白名单内的其他路径、<code>git push</code>、<code>reset --hard</code>、kubectl/helm 写操作、代码评审/工单系统写操作（含评论和工时）、写凭证文件、<code>patch</code>/<code>git apply</code>、调用无 gate 的 agent（default/my_demo）、<code>--push</code> 脚本、无法解析的 shell</span><span class="en">deleting other allow-listed paths, <code>git push</code>, <code>reset --hard</code>, kubectl/helm writes, code-review/issue-tracker writes incl. comments &amp; worklogs, writing credential files, <code>patch</code>/<code>git apply</code>, calling ungated agents (default/my_demo), <code>--push</code> scripts, unparseable shell</span></td><td><span class="zh">拦截，直到用户审批</span><span class="en">blocked until user approves</span></td></tr>
+      <tr><td><span class="chip c-l2">L2</span></td><td><span class="zh">没有任何规则覆盖的动作</span><span class="en">anything no rule covers</span></td><td><span class="zh">放行 + 记录（灰区，未来审计的输入）</span><span class="en">allowed + logged (gray zone, future audit input)</span></td></tr>
+      <tr><td><span class="chip c-l1">L1</span></td><td><span class="zh">在自己目录内写入；本地 <code>git add/commit</code>；自己的 bin 脚本；发给自己的邮件；在 <code>/tmp/me-*</code>、<code>/work/me/&lt;sub&gt;</code>、<code>~/kiro-pure/tmp/&lt;sub&gt;</code> 内删除</span><span class="en">writes in own dirs; local <code>git add/commit</code>; own bin scripts; mail to self; deleting inside <code>/tmp/me-*</code>, <code>/work/me/&lt;sub&gt;</code> and <code>~/kiro-pure/tmp/&lt;sub&gt;</code></span></td><td><span class="zh">放行</span><span class="en">allowed</span></td></tr>
+      <tr><td><span class="chip c-l0">L0</span></td><td><span class="zh">只读 shell；MCP <code>get_</code>/<code>search_</code>/<code>list_</code></span><span class="en">read-only shell; MCP <code>get_</code>/<code>search_</code>/<code>list_</code></span></td><td><span class="zh">放行</span><span class="en">allowed</span></td></tr>
+    </table>
+  </section>
+
+  <!-- 5. L3 APPROVAL -->
+  <section id="approval">
+    <h2><span class="zh">⑤ L3 审批</span><span class="en">⑤ L3 approval</span></h2>
+    <div class="card">
+      <span class="chip c-l3">L3 · gate_id</span>
+      <ol>
+        <li><span class="zh">拦截消息告诉模型：停下来，向用户请求批准。</span><span class="en">The block message tells the model to stop and ask the user.</span></li>
+        <li><span class="zh">用户在<strong>自己的终端</strong>里运行 <code>kiro-gate approve &lt;gate_id&gt;</code>。</span><span class="en">The user runs <code>kiro-gate approve &lt;gate_id&gt;</code> in <strong>their own terminal</strong>.</span></li>
+        <li><span class="zh">在 kiro-cli 下（存在 <code>KIRO_*</code> 环境变量或 kiro-cli 祖先进程）或没有 tty 时，approve 直接拒绝。</span><span class="en">approve refuses under kiro-cli (<code>KIRO_*</code> env or a kiro-cli ancestor process) and without a tty.</span></li>
+        <li><span class="zh">用户必须把 gate_id 再手动输入一遍。</span><span class="en">The user must type the gate_id back.</span></li>
+        <li><span class="zh">批准 = <code>sha256(tool, 去掉 __tool_use_purpose 的参数, cwd)</code>，一次性，10 分钟有效；改动一个字符 → 需要新的批准。</span><span class="en">Approval = <code>sha256(tool, args without __tool_use_purpose, cwd)</code>, one-shot, 10 min; change one character → new approval.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 6. SHELL PARSING -->
+  <section id="parsing">
+    <h2><span class="zh">⑥ 难点：shell 解析</span><span class="en">⑥ The hard part: shell parsing</span></h2>
+    <p class="lead"><span class="zh">字符串规则最容易被包装绕过。下面这些写法都被正确识别：</span><span class="en">String rules are easiest to sidestep by wrapping. All of these are caught:</span></p>
+    <table class="tbl">
+      <tr><th><span class="zh">命令</span><span class="en">Command</span></th><th><span class="zh">识别为</span><span class="en">Caught as</span></th></tr>
+      <tr><td><code>bash -lc 'rm -rf /srv/shared/x'</code></td><td><span class="chip c-deny">DENY</span></td></tr>
+      <tr><td><code>{ rm -rf /srv/shared/x; }</code></td><td><span class="chip c-deny">DENY</span></td></tr>
+      <tr><td><code>bash &lt;&lt;EOT (rm -rf /etc)</code></td><td><span class="chip c-deny">DENY</span></td></tr>
+      <tr><td><code>cd contexts/rules &amp;&amp; sed -i ... gate-policy.json</code></td><td><span class="chip c-deny">DENY</span></td></tr>
+      <tr><td><code>cp /tmp/me-x/*.py bin/</code></td><td><span class="chip c-l3">L3</span></td></tr>
+      <tr><td><code>git -c core.pager=cat push</code></td><td><span class="chip c-l3">L3</span></td></tr>
+    </table>
+    <h3><span class="zh">评审历史：reviewer code review 6 轮</span><span class="en">Review history: 6 rounds of reviewer code review</span></h3>
+    <div class="hist" aria-label="findings per round: 18, 8, 3, 2, 1, 0">
+      <div style="height:100%"><span>18</span></div>
+      <div style="height:44%"><span>8</span></div>
+      <div style="height:17%"><span>3</span></div>
+      <div style="height:11%"><span>2</span></div>
+      <div style="height:6%"><span>1</span></div>
+      <div class="zero" style="height:3%"><span>0</span></div>
+    </div>
+    <div class="histlbl"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span><span>R6</span></div>
+    <p><span class="zh">发现数 18 → 8 → 3 → 2 → 1 → 0。gate 本身 53 个单元测试（含 audit + perf 共 71 个）。</span><span class="en">Findings 18 → 8 → 3 → 2 → 1 → 0. 53 unit tests for the gate (71 total with audit + perf).</span></p>
+  </section>
+
+  <!-- 7. WEEKLY AUDIT -->
+  <section id="audit">
+    <h2><span class="zh">⑦ 每周审计</span><span class="en">⑦ Weekly audit</span></h2>
+    <p><span class="zh">思路和 Memory Dream 相同：原始记录 → 定期整合 → 人来决定。但它是单独的一步，因为：它改变的是权限边界；它是双向的；它的信号是结构化的。</span><span class="en">Same idea as Memory Dream — raw records → periodic consolidation → human decides — but a separate step, because it changes permission boundaries, it is two-way, and its signal is structured.</span></p>
+    <table class="tbl">
+      <tr><th><span class="zh">方向</span><span class="en">Direction</span></th><th><span class="zh">触发条件</span><span class="en">Trigger</span></th><th><span class="zh">提案</span><span class="en">Proposal</span></th></tr>
+      <tr><td><span class="chip c-l1"><span class="zh">放宽</span><span class="en">relax</span></span></td><td><span class="zh">某个 L2 key 在 ≥2 个 session 中被放行 ≥5 次</span><span class="en">an L2 key allowed ≥5 times in ≥2 sessions</span></td><td><span class="zh">提议 L1，且仅限自己目录</span><span class="en">propose L1, limited to own dirs</span></td></tr>
+      <tr><td><span class="chip c-l3"><span class="zh">收紧</span><span class="en">tighten</span></span></td><td><span class="zh">有风险的 L2 模式，如 curl POST / ssh / kill</span><span class="en">risky L2 patterns like curl POST / ssh / kill</span></td><td><span class="zh">提议 L3</span><span class="en">propose L3</span></td></tr>
+    </table>
+    <div class="note"><span class="zh"><code>apply</code> 只会<strong>新增</strong>规则。分级顺序是 DENY &gt; L3 &gt; L0 &gt; L1，所以新增的 L1 永远不能压过已有的 L3；L3 从不被降级。职责分离：脚本提案，reviewer 评判，只有用户能 apply。</span><span class="en"><code>apply</code> only <strong>adds</strong> rules. Since classification order is DENY &gt; L3 &gt; L0 &gt; L1, an added L1 can never lower an L3; L3 is never downgraded. Separation: the script proposes, the reviewer judges, only the user applies.</span></div>
+  </section>
+
+  <!-- 8. DAY-1 NUMBERS -->
+  <section id="numbers">
+    <h2><span class="zh">⑧ 第一天的数据</span><span class="en">⑧ Day-1 numbers</span></h2>
+    <p class="lead"><span class="zh">shadow 模式，2026-10-23。注意：主要是开发和测试 gate 本身产生的流量，不代表日常分布。</span><span class="en">Shadow mode, 2026-10-23. Note: mostly development and test traffic from building the gate itself, not a typical day's distribution.</span></p>
+    <div class="stats">
+      <div class="stat"><div class="v">171</div><div class="l"><span class="zh">决策总数</span><span class="en">decisions</span></div></div>
+      <div class="stat"><div class="v">1 ms</div><div class="l"><span class="zh">gate 延迟 p50</span><span class="en">gate latency p50</span></div></div>
+      <div class="stat"><div class="v">6 ms</div><div class="l"><span class="zh">gate 延迟 p95</span><span class="en">gate latency p95</span></div></div>
+      <div class="stat"><div class="v">0</div><div class="l"><span class="zh">gate 错误</span><span class="en">gate errors</span></div></div>
+    </div>
+    <div class="sbar" role="img" aria-label="L1 29.8%, L2 24.6%, L0 19.3%, L3 19.3%, DENY 7.0%">
+      <div style="width:29.8%;background:var(--olive)">L1 29.8%</div>
+      <div style="width:24.6%;background:var(--amber)">L2 24.6%</div>
+      <div style="width:19.3%;background:var(--blue)">L0 19.3%</div>
+      <div style="width:19.3%;background:var(--clay)">L3 19.3%</div>
+      <div style="width:7.0%;background:var(--red)">7%</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--olive)"></i>L1 29.8%</span>
+      <span><i style="background:var(--amber)"></i>L2 24.6%</span>
+      <span><i style="background:var(--blue)"></i>L0 19.3%</span>
+      <span><i style="background:var(--clay)"></i>L3 19.3%</span>
+      <span><i style="background:var(--red)"></i>DENY 7.0%</span>
+    </div>
+  </section>
+
+  <!-- CASES -->
+  <section id="cases">
+    <h2><span class="zh">⑨ 真实案例回放</span><span class="en">⑨ Real cases, replayed</span></h2>
+    <p class="lead"><span class="zh">以下 7 个案例全部取自 2026-10-23 的决策日志（<code>data/gate/decisions-2026-10.jsonl</code>），时间为北京时间。点左侧案例，右侧逐步回放 gate 看到了什么、怎么判、shadow 下实际发生了什么、enforce 下会怎样。</span><span class="en">All 7 cases come from the 2026-10-23 decision log (<code>data/gate/decisions-2026-10.jsonl</code>), times in Beijing time. Pick a case to replay step by step what the gate saw, how it classified it, what actually happened in shadow mode, and what enforce mode would do.</span></p>
+    <div class="cases">
+      <div class="case-list" id="caseList"></div>
+      <div class="case-panel" id="casePanel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- 10. LIMITS -->
+  <section id="limits">
+    <h2><span class="zh">⑩ 局限（坦白说）</span><span class="en">⑩ Limits (honestly)</span></h2>
+    <div class="limits">
+      <ul>
+        <li><span class="zh"><strong>防失误的护栏，不是沙箱。</strong>同一用户身份下刻意混淆，可以绕过字符串规则。</span><span class="en"><strong>A guard-rail against mistakes, not a sandbox.</strong> Deliberate same-user obfuscation can get around string rules.</span></li>
+        <li><span class="zh"><strong>L2 还没有实时审查。</strong>为 L2 引入 gate agent 是之后的选项。</span><span class="en"><strong>L2 is not reviewed in real time yet.</strong> A gate agent for L2 is a later option.</span></li>
+        <li><span class="zh"><strong>目前是 shadow 模式。</strong>看过 <code>kiro-gate stats</code> 后再切 enforce。</span><span class="en"><strong>Currently shadow.</strong> Enforce after reviewing <code>kiro-gate stats</code>.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 10. CHEAT-SHEET -->
+  <section id="cheatsheet">
+    <h2><span class="zh">⑪ 命令速查</span><span class="en">⑪ Command cheat-sheet</span></h2>
+    <div class="codebox">
+      <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+<pre id="cheat">kiro-gate stats              <span class="cm"># decision distribution</span>
+kiro-gate list               <span class="cm"># last 24h blocked (shadow: would-be-blocked)</span>
+kiro-gate approve &lt;id&gt;       <span class="cm"># one-shot approval (own terminal)</span>
+kiro-gate mode enforce       <span class="cm"># switch shadow -&gt; enforce</span>
+gate-audit.py --days 7       <span class="cm"># weekly relax/tighten proposals</span>
+kiro-gate apply &lt;date&gt; P01   <span class="cm"># your tty only; y/N per proposal; add-only</span>
+gate-install.py remove       <span class="cm"># emergency uninstall</span></pre>
+    </div>
+  </section>
+
+  <footer>
+    <span class="zh">由 Kiro 生成 · 2026-10-23 · 数据来自 action gate shadow 日志</span>
+    <span class="en">By Kiro · 2026-10-23 · data from the action gate shadow log</span>
+  </footer>
+</div>
+
+<script>
+function switchLang(l){document.documentElement.lang=l;document.querySelectorAll('.nav-controls button').forEach(b=>b.classList.remove('active'));document.getElementById(l==='zh-CN'?'btnZh':'btnEn').classList.add('active');}
+function toggleTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'':'dark';document.getElementById('btnTheme').innerHTML=d.dataset.theme==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>';}
+window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('progressBar').style.width=(h>0?window.scrollY/h*100:0)+'%';});
+function copyCode(btn){
+  const txt=btn.parentElement.querySelector('pre').innerText;
+  const done=()=>{btn.innerHTML='<i class="fas fa-check"></i> Copied';setTimeout(()=>{btn.innerHTML='<i class="fas fa-copy"></i> Copy';},1500);};
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done);}else{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();done();}
+}
+const CASES=[
+ {lvl:'L3',cls:'c-l3',ts:'13:51:32',agent:'kiro-lab',tool:'shell',rule:'l3-git-push',
+  t:{zh:'真实 push 到 origin/main',en:'A real push to origin/main'},
+  s:{zh:'reviewer 代码审查通过后，主 agent 执行 push 流程：先看暂存区，再推送，再记一笔推送日志。',en:'After the reviewer passed the code review, the main agent ran the push step: check staged files, push, log the push.'},
+  input:"cd ~/kiro-pure && git status --short | grep -E '^(A|M) ' ; git push origin main 2>&1 | tail -4; ...",
+  steps:[{zh:'按 <code>;</code> <code>&&</code> <code>|</code> 拆成 6 段；<code>cd</code> 更新当前目录',en:'split on <code>;</code> <code>&&</code> <code>|</code> into 6 segments; <code>cd</code> updates the working dir'},
+         {zh:'<code>git status</code>、<code>grep</code>、<code>tail</code> → L0',en:'<code>git status</code>, <code>grep</code>, <code>tail</code> → L0'},
+         {zh:'<code>git push origin main</code> 命中 <code>l3-git-push</code>',en:'<code>git push origin main</code> matches <code>l3-git-push</code>'},
+         {zh:'整条命令取最高段 → L3',en:'whole command takes the highest segment → L3'}],
+  shadow:{zh:'放行，记录 verdict=block（"本该拦下"）。push 成功。',en:'Allowed, logged as verdict=block ("would have blocked"). Push succeeded.'},
+  enforce:{zh:'exit 2，工具不执行。模型收到：',en:'exit 2, tool does not run. The model receives:'},
+  msg:'GATE L3 [l3-git-push] blocked. gate_id=xxxxxxxx\nStop and ask the user to approve it in THEIR OWN terminal:  kiro-gate approve xxxxxxxx',
+  take:{zh:'这是今天唯一一次真实 push（10:42 那次是端到端测试里的 <code>--dry-run</code>）。enforce 后 push 需要你在自己终端回输 gate_id 才能放行一次。',en:'The only real push today (the 10:42 one was an E2E-test <code>--dry-run</code>). Under enforce, a push needs you to type the gate_id back in your own terminal, once.'}},
+ {lvl:'DENY',cls:'c-deny',ts:'13:50:32',agent:'reviewer',tool:'shell',rule:'deny-rm-outside',
+  t:{zh:'reviewer 清理自己的临时文件',en:'The reviewer cleans up its own temp file'},
+  s:{zh:'reviewer 在复审时把探针脚本写到 <code>/tmp/probe_p6.py</code>，跑完后 <code>rm -f</code> 删掉。',en:'During a re-review the reviewer wrote a probe to <code>/tmp/probe_p6.py</code>, ran it, then <code>rm -f</code>-ed it.'},
+  input:"cat > /tmp/probe_p6.py <<'EOF' ... EOF\n/usr/bin/python3 /tmp/probe_p6.py\nrm -f /tmp/probe_p6.py",
+  steps:[{zh:'heredoc 正文被剥离，不当成命令',en:'heredoc body is cut out, not treated as commands'},
+         {zh:'<code>cat > /tmp/probe_p6.py</code>：写到 write_roots 之外 → L2',en:'<code>cat > /tmp/probe_p6.py</code>: write outside write_roots → L2'},
+         {zh:'<code>rm -f /tmp/probe_p6.py</code>：路径不在删除白名单 → <code>deny-rm-outside</code>',en:'<code>rm -f /tmp/probe_p6.py</code>: path is not allow-listed → <code>deny-rm-outside</code>'},
+         {zh:'取最高段 → DENY（不可审批）',en:'highest segment → DENY (cannot be approved)'}],
+  shadow:{zh:'放行，记录 verdict=deny。文件被删。',en:'Allowed, logged as verdict=deny. File was deleted.'},
+  enforce:{zh:'exit 2，模型收到：',en:'exit 2, the model receives:'},
+  msg:'GATE DENY [deny-rm-outside] — this action is not permitted for the agent and cannot be approved.',
+  take:{zh:'gate 抓到的是 agent 行为问题：Red Line 规定只能删白名单路径。修法在源头：reviewer 的 prompt 应要求临时文件只放 <code>/tmp/me-*</code>（在那里删除是 L1）。',en:'What the gate caught is an agent-behaviour problem: the Red Line only allows deleting allow-listed paths. The fix is at the source: the reviewer prompt should put temp files under <code>/tmp/me-*</code> (deleting there is L1).'}},
+ {lvl:'DENY',cls:'c-deny',ts:'13:34:07',agent:'kiro-lab',tool:'write',rule:'deny-protected',
+  t:{zh:'主 agent 重写策略文件',en:'The main agent rewrites the policy file'},
+  s:{zh:'按 reviewer 第一轮意见修 gate 时，主 agent 用 write 工具整体重写 <code>gate-policy.json</code>。',en:'While fixing the first-round review findings, the main agent rewrote <code>gate-policy.json</code> with the write tool.'},
+  input:'write  create ~/kiro-pure/contexts/rules/gate-policy.json',
+  steps:[{zh:'write 工具：取 <code>path</code>，解析成绝对路径',en:'write tool: take <code>path</code>, resolve to an absolute path'},
+         {zh:'路径在 <code>protected_paths</code> 里 → <code>deny-protected</code>',en:'path is in <code>protected_paths</code> → <code>deny-protected</code>'}],
+  shadow:{zh:'放行，策略被改写（今天是 gate 开发期，正是这样一步步迭代出来的）。',en:'Allowed; the policy was rewritten (today was gate development — this is how it was iterated).'},
+  enforce:{zh:'exit 2。策略、gate 脚本、agent 配置、审批目录只能由你改。',en:'exit 2. Policy, gate scripts, agent configs and approvals can only be changed by you.'},
+  msg:'GATE DENY [deny-protected] — this action is not permitted for the agent and cannot be approved.',
+  take:{zh:'enforce 后改规则的唯一途径：你手工编辑，或者周审计的 <code>kiro-gate apply</code>（同样只能在你的终端里跑）。',en:'Under enforce the only ways to change rules are your own edits or the weekly-audit <code>kiro-gate apply</code> (also only from your terminal).'}},
+ {lvl:'L3',cls:'c-l3',ts:'14:34:08',agent:'reviewer',tool:'shell',rule:'l3-delete',
+  t:{zh:'删除目标是变量',en:'A delete whose target is a variable'},
+  s:{zh:'reviewer 在验证轮里先清空自己的探针目录再重建。',en:'In a verification pass the reviewer wiped and recreated its probe dir.'},
+  input:'set -e; D=/tmp/me-perfverify; rm -rf $D; mkdir -p $D/s $D/g; ...',
+  steps:[{zh:'<code>D=…</code> 赋值不展开：gate 不执行 shell，看不到 <code>$D</code> 的值',en:'<code>D=…</code> is not expanded: the gate does not run shell, so it cannot see <code>$D</code>'},
+         {zh:'<code>rm -rf $D</code>：路径未知 → 不能证明在 scratch 内，不能套 L1',en:'<code>rm -rf $D</code>: path unknown → cannot prove it is inside scratch, so not L1'},
+         {zh:'命中 <code>l3-delete</code> → L3',en:'matches <code>l3-delete</code> → L3'}],
+  shadow:{zh:'放行，目录被清空重建。',en:'Allowed; the dir was wiped and recreated.'},
+  enforce:{zh:'exit 2，需要你审批。',en:'exit 2, needs your approval.'},
+  msg:'GATE L3 [l3-delete] blocked. gate_id=xxxxxxxx',
+  take:{zh:'实际目录是 <code>/tmp/me-perfverify</code>，本可以是 L1。保守是对的：变量里可能是任何路径。写成字面路径 <code>rm -rf /tmp/me-perfverify</code> 就是 L1。',en:'The real dir was <code>/tmp/me-perfverify</code>, which would be L1. Being conservative is right: a variable could hold any path. Writing the literal path makes it L1.'}},
+ {lvl:'L3',cls:'c-l3',ts:'14:27:54',agent:'kiro-lab',tool:'shell',rule:'l3-ungated-run-agent',fp:true,
+  t:{zh:'误报：git add 了 run-agent.sh',en:'False positive: git add of run-agent.sh'},
+  s:{zh:'提交 agent-perf 改动时，<code>git add</code> 的文件列表里有 <code>bin/run-agent.sh</code>。',en:'Committing the agent-perf change, <code>git add</code> listed <code>bin/run-agent.sh</code>.'},
+  input:'cd ~/kiro-pure && git add bin/run-agent.sh bin/agent-perf.py tests/test_agent_perf.py ...',
+  steps:[{zh:'旧规则：文本里任何位置出现 <code>run-agent.sh &lt;非受控 agent&gt;</code> 就算"调用未挂 gate 的 agent"',en:'old rule: <code>run-agent.sh &lt;non-gated name&gt;</code> anywhere in the text counted as "calling an ungated agent"'},
+         {zh:'<code>run-agent.sh bin/agent-perf.py</code> 被当成调用名为 <code>bin/agent-perf.py</code> 的 agent → L3',en:'<code>run-agent.sh bin/agent-perf.py</code> read as calling an agent named <code>bin/agent-perf.py</code> → L3'},
+         {zh:'当天回顾日志发现，改为只在 <code>run-agent.sh</code> 处于命令位置时命中',en:'found in the same-day log review; rule now only fires when <code>run-agent.sh</code> is the command'},
+         {zh:'重放：同一命令现在 → L2（放行）',en:'replay: the same command now → L2 (allowed)'}],
+  shadow:{zh:'放行，记录了误报。',en:'Allowed; the false positive was logged.'},
+  enforce:{zh:'修复前：每次这样的 commit 都要你审批，纯摩擦。修复后（commit 23434dc，补了回归测试）：不再拦。',en:'Before the fix: every such commit would need approval — pure friction. After the fix (commit 23434dc, with regression tests): not blocked.'},
+  msg:'',
+  take:{zh:'这就是先跑 shadow 的意义：用真实流量找误报，修好再 enforce。',en:'This is why shadow comes first: find false positives on real traffic, fix them, then enforce.'}},
+ {lvl:'L1',cls:'c-l1',ts:'10:42:40',agent:'kiro-lab',tool:'write',rule:'l1-write-own',
+  t:{zh:'在自己目录里写文件',en:'Writing a file in your own dir'},
+  s:{zh:'端到端测试：让真实 kiro-lab 在 scratch 目录建一个文件。',en:'End-to-end test: the real kiro-lab agent creates a file in a scratch dir.'},
+  input:'write  create /tmp/me-gate-e2e/a.txt',
+  steps:[{zh:'路径在 <code>write_roots</code>（<code>/tmp/me-</code>）下',en:'path is under <code>write_roots</code> (<code>/tmp/me-</code>)'},
+         {zh:'不在受保护路径、不是凭据文件 → <code>l1-write-own</code>',en:'not protected, not a credential file → <code>l1-write-own</code>'}],
+  shadow:{zh:'放行。',en:'Allowed.'},enforce:{zh:'放行，约 1 ms。',en:'Allowed, ~1 ms.'},msg:'',
+  take:{zh:'绝大多数日常写操作都在这一级，用户无感。',en:'Most everyday writes land here; you never notice.'}},
+ {lvl:'L0',cls:'c-l0',ts:'10:42:46',agent:'kiro-lab',tool:'@tracker-mcp/get_issue',rule:'l0-mcp-read',
+  t:{zh:'查一个工单',en:'Looking up a tracker issue'},
+  s:{zh:'端到端测试里调用工单 MCP 查询。',en:'A tracker MCP query in the end-to-end test.'},
+  input:'@tracker-mcp/get_issue  {"issue_key": "DEMO-1"}',
+  steps:[{zh:'MCP 工具名 <code>@server/tool</code>；忽略模型自己写的 <code>__tool_use_purpose</code>',en:'MCP tool name is <code>@server/tool</code>; the model-written <code>__tool_use_purpose</code> is ignored'},
+         {zh:'<code>get_</code> 前缀 → <code>l0-mcp-read</code>',en:'<code>get_</code> prefix → <code>l0-mcp-read</code>'}],
+  shadow:{zh:'放行。',en:'Allowed.'},enforce:{zh:'放行。若是 <code>add_comment</code> / <code>transition_issue</code> 则是 L3。',en:'Allowed. <code>add_comment</code> / <code>transition_issue</code> would be L3.'},msg:'',
+  take:{zh:'读和写在 MCP 层按工具名分开：查询零摩擦，写共享系统一律要人。',en:'MCP reads and writes are split by tool name: lookups are frictionless, writes to shared systems always need a human.'}}
+];
+function renderCase(i){
+  const c=CASES[i];
+  (window._caseTimers||[]).forEach(clearTimeout);
+  document.querySelectorAll('.case-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  const both=(o)=>'<span class="zh">'+o.zh+'</span><span class="en">'+o.en+'</span>';
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  document.getElementById('casePanel').innerHTML=
+   '<div class="cmeta">2026-10-23 '+c.ts+' · agent='+c.agent+' · tool='+c.tool+' · mode=shadow</div>'+
+   '<h3>'+both(c.t)+'</h3><p style="margin:0;font-size:14px">'+both(c.s)+'</p>'+
+   '<ul class="trace"><li><span class="k">'+both({zh:'gate 看到',en:'gate saw'})+'</span><code>'+esc(c.input)+'</code></li>'+
+   c.steps.map(s=>'<li><span class="k">'+both({zh:'判定',en:'classify'})+'</span>'+both(s)+'</li>').join('')+
+   '<li><span class="k">'+both({zh:'决策',en:'decision'})+'</span><span class="chip '+c.cls+'">'+c.lvl+'</span> <code>'+c.rule+'</code>'+(c.fp?' <span class="chip c-l2">'+both({zh:'误报→已修',en:'false positive→fixed'})+'</span>':'')+'</li></ul>'+
+   '<div class="outcome"><div><b>shadow '+both({zh:'（今天实际）',en:'(what happened)'})+'</b>'+both(c.shadow)+'</div>'+
+   '<div><b>enforce '+both({zh:'（切换后）',en:'(after switch)'})+'</b>'+both(c.enforce)+(c.msg?'<pre>'+esc(c.msg)+'</pre>':'')+'</div></div>'+
+   '<div class="takeaway'+(c.fp?' fp':'')+'">'+both(c.take)+'</div>'+
+   '<button class="replay-btn" onclick="renderCase('+i+')"><i class="fas fa-rotate-right"></i> '+both({zh:'重新回放',en:'Replay'})+'</button>';
+  window._caseTimers=[...document.querySelectorAll('#casePanel .trace li')].map((li,k)=>setTimeout(()=>li.classList.add('on'),120+k*260));
+}
+(function(){
+  const list=document.getElementById('caseList');if(!list)return;
+  CASES.forEach((c,i)=>{const b=document.createElement('button');b.className='case-btn';b.type='button';
+    b.innerHTML='<span class="chip '+c.cls+'">'+c.lvl+'</span><span><span class="zh">'+c.t.zh+'</span><span class="en">'+c.t.en+'</span></span>';
+    b.onclick=()=>renderCase(i);list.appendChild(b);});
+  renderCase(0);
+})();
+</script>
+</body>
+</html>

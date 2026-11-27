@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insight Trend W43–W48 (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../../kiro-base.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --ivory: #FAF9F5;
+  --paper: #FFFFFF;
+  --slate: #141413;
+  --clay: #D97757;
+  --clay-d: #B85C3E;
+  --clay-light: #F4E0D9;
+  --olive: #788C5D;
+  --olive-light: #E8F0DE;
+  --amber: #B8860B;
+  --amber-light: #FDF3D7;
+  --red: #C44B4B;
+  --red-light: #FCE8E8;
+  --blue: #4B7BC4;
+  --blue-light: #E3F2FD;
+  --g100: #F0EEE6;
+  --g200: #E6E3DA;
+  --g300: #D1CFC5;
+  --g500: #87867F;
+  --g700: #3D3D3A;
+  --sans: Roboto, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --max-w: 960px;
+  --radius: 8px;
+  /* kiro-base.css compat */
+  --kb-bg: var(--ivory); --kb-surface: var(--paper); --kb-text: var(--slate);
+  --kb-text-s: var(--g700); --kb-text-m: var(--g500); --kb-accent: var(--clay); --kb-border: var(--g300);
+}
+[data-theme="dark"] {
+  --ivory: #1a1a2e;
+  --paper: #16213e;
+  --slate: #e0e0e0;
+  --g100: #1e1e3a;
+  --g200: #2a2a4a;
+  --g300: #3a3a5a;
+  --g500: #a0a0a0;
+  --g700: #c0c0c0;
+  --clay-light: #3d2520;
+  --olive-light: #1e2e1a;
+  --amber-light: #2e2510;
+  --red-light: #2e1a1a;
+  --blue-light: #1a2535;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--sans); line-height: 1.6; transition: background 200ms, color 200ms; }
+
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--clay); z-index: 9999; width: 0%; transition: width 100ms; }
+.back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--g300); background: var(--paper); cursor: pointer; opacity: 0; transition: opacity 200ms; font-size: 18px; }
+.back-to-top.visible { opacity: 1; }
+
+.wrap { max-width: var(--max-w); margin: 0 auto; padding: 20px 24px 60px; }
+
+/* Header */
+.header { text-align: center; margin-bottom: 2rem; padding: 2rem 0; border-bottom: 2px solid var(--clay); }
+.header h1 { color: var(--clay); margin: 0 0 8px 0; font-size: 1.8rem; }
+.header .subtitle { color: var(--g500); font-size: 0.9rem; }
+
+/* Stats grid */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 1.5rem 0; }
+.stat { background: var(--paper); border: 1px solid var(--g300); border-radius: var(--radius); padding: 14px; text-align: center; }
+.stat .num { font-size: 28px; font-weight: 700; color: var(--clay); }
+.stat .label { font-size: 12px; color: var(--g500); }
+
+/* Section */
+section { margin-top: 2rem; }
+section h2 { color: var(--olive); font-size: 1.3rem; margin-bottom: 1rem; }
+
+/* Cards */
+.card { background: var(--paper); border: 1px solid var(--g300); border-radius: var(--radius); padding: 16px; margin: 12px 0; }
+.card.friction { border-left: 4px solid var(--clay); }
+.card.resolved { border-left: 4px solid var(--olive); }
+.card.suggestion { border-left: 4px solid var(--amber); }
+.card strong { display: block; margin-bottom: 4px; }
+.card p { margin: 0; color: var(--g700); font-size: 0.9rem; }
+
+/* Tags */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; margin-right: 6px; }
+.tag-open { background: var(--clay-light); color: var(--clay-d); }
+.tag-resolved { background: var(--olive-light); color: var(--olive); }
+.tag-suggestion { background: var(--amber-light); color: var(--amber); }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+th, td { padding: 6px 10px; border: 1px solid var(--g300); text-align: center; }
+th { background: var(--g100); }
+
+/* Chart */
+canvas { background: var(--paper); border: 1px solid var(--g300); border-radius: var(--radius); padding: 12px; margin: 16px 0; }
+
+/* Pattern / Recommendation boxes */
+.pattern { background: var(--g100); padding: 12px; border-radius: 6px; margin: 8px 0; }
+.rec { background: var(--olive-light); padding: 16px; border-radius: var(--radius); border-left: 4px solid var(--olive); }
+
+/* kiro-fx v1: reduced motion + card spotlight + button fill */
+:root { --fx-spot: rgba(217,119,87,.08); --fx-fill: rgba(217,119,87,.14); }
+.card, .stat-card { background-image: radial-gradient(420px circle at var(--mx, -999px) var(--my, -999px), var(--fx-spot), transparent 45%); }
+.kiro-nav .nav-controls button { position: relative; }
+.kiro-nav .nav-controls button, .back-to-top { overflow: hidden; isolation: isolate; }   /* back-to-top stays position: fixed */
+.kiro-nav .nav-controls button::before, .back-to-top::before {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: -1; border-radius: 50%;
+  background: var(--fx-fill); transform: translate(-50%, -50%); transition: width .5s ease, height .5s ease; pointer-events: none;
+}
+
+.kiro-nav .nav-controls button:hover::before, .kiro-nav .nav-controls button:focus-visible::before,
+.back-to-top:hover::before, .back-to-top:focus-visible::before { width: 240px; height: 240px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<nav class="kiro-nav">
+  <a href="../../index.html" class="brand"><i class="fas fa-bolt"></i> kiro-pure</a>
+  <div class="nav-controls">
+    <button onclick="switchLang('zh-CN')" id="btnZh">中文</button>
+    <button class="active" onclick="switchLang('en')" id="btnEn">EN</button>
+    <button onclick="toggleTheme()" id="btnTheme" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
+    <a href="../../index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+<button class="back-to-top" id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<div class="wrap">
+
+  <div class="header">
+    <h1 data-zh="洞察趋势 W43–W48（演示）" data-en="Insight Trend W43–W48 (demo)">Insight Trend W43–W48 (demo)</h1>
+    <div class="subtitle" data-zh="6 周摩擦点走势与已落地修复 | 生成于 2026-11-24" data-en="Six weeks of friction trends and the fixes that landed | Generated 2026-11-24">Six weeks of friction trends and the fixes that landed | Generated 2026-11-24</div>
+  </div>
+
+  <!-- ============================================================
+       CONTENT PLACEHOLDERS
+       ============================================================ -->
+
+  <!-- STATS: Replace with actual stat cards -->
+  <div class="stats">
+    <div class="stat"><div class="num">142</div><div class="label" data-zh="会话数" data-en="Sessions">Sessions</div></div>
+<div class="stat"><div class="num">31</div><div class="label" data-zh="摩擦点" data-en="Friction points">Friction points</div></div>
+<div class="stat"><div class="num">22</div><div class="label" data-zh="已解决" data-en="Resolved">Resolved</div></div>
+<div class="stat"><div class="num">−58%</div><div class="label" data-zh="每周摩擦变化" data-en="Weekly friction change">Weekly friction change</div></div>
+  </div>
+
+  <!-- CHARTS: Insert <canvas> + Chart.js config -->
+  <section id="trend"><h2 data-zh="📈 每周摩擦点（按类别）" data-en="📈 Friction per week (by category)">📈 Friction per week (by category)</h2>
+<canvas id="trendChart" height="110" role="img" aria-label="Friction points per week by category"></canvas></section>
+<script>
+// switchLang is declared by the template after this block → wrap it once the DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  const ds = [{"label": "Tool misuse", "label_zh": "工具误用", "data": [6, 5, 4, 2, 2, 1], "borderColor": "#D97757", "backgroundColor": "#D97757", "tension": 0.3}, {"label": "Lost context", "label_zh": "上下文丢失", "data": [3, 3, 2, 2, 1, 1], "borderColor": "#4B7BC4", "backgroundColor": "#4B7BC4", "tension": 0.3}, {"label": "Output format", "label_zh": "输出格式", "data": [2, 1, 2, 1, 1, 0], "borderColor": "#B8860B", "backgroundColor": "#B8860B", "tension": 0.3}];
+  const chart = new Chart(document.getElementById("trendChart"), {type: "line",
+    data: {labels: ["W43", "W44", "W45", "W46", "W47", "W48"], datasets: ds.map(s => ({...s}))},
+    options: {responsive: true, plugins: {legend: {position: "bottom"}},
+      scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
+  const orig = window.switchLang;
+  window.switchLang = lang => { orig(lang); const zh = lang === "zh-CN";
+    chart.data.datasets.forEach((s, i) => s.label = zh ? ds[i].label_zh : ds[i].label); chart.update(); };
+});
+</script>
+
+  <!-- FRICTION CARDS: One .card per friction point -->
+  <section id="frictions">
+    <h2 data-zh="⚡ 摩擦点" data-en="⚡ Friction Points">⚡ Friction Points</h2>
+    <div class="card resolved"><strong><span class="tag tag-resolved" data-zh="已解决" data-en="Resolved">Resolved</span> <span data-zh="shell 方言不匹配" data-en="Shell dialect mismatch">Shell dialect mismatch</span></strong><p data-zh="登录 shell 是 tcsh，bash 语法直接执行失败。gate lint 现在在执行前拦截并给出 &lt;code&gt;sh -c&lt;/code&gt; 改写建议。" data-en="The login shell is tcsh, so bash syntax failed at run time. The gate lint now intercepts before execution and suggests an &lt;code&gt;sh -c&lt;/code&gt; rewrite.">The login shell is tcsh, so bash syntax failed at run time. The gate lint now intercepts before execution and suggests an <code>sh -c</code> rewrite.</p></div>
+<div class="card resolved"><strong><span class="tag tag-resolved" data-zh="已解决" data-en="Resolved">Resolved</span> <span data-zh="全局 find 卡住会话" data-en="Global find hung the session">Global find hung the session</span></strong><p data-zh="一次 &lt;code&gt;find /&lt;/code&gt; 卡住整个会话。规则禁止根目录扫描，并写入 discipline 翻车实例。" data-en="One &lt;code&gt;find /&lt;/code&gt; hung the whole session. Root-level scans are now banned and recorded as a discipline failure case.">One <code>find /</code> hung the whole session. Root-level scans are now banned and recorded as a discipline failure case.</p></div>
+<div class="card friction"><strong><span class="tag tag-open" data-zh="待处理" data-en="Open">Open</span> <span data-zh="报告 EN 占位未翻译" data-en="Untranslated EN placeholders">Untranslated EN placeholders</span></strong><p data-zh="日报 &lt;code&gt;.en&lt;/code&gt; 仍有 &lt;code&gt;[EN]&lt;/code&gt; 占位时就被发布。计划在 publish 前加检查。" data-en="Daily reports were published with &lt;code&gt;[EN]&lt;/code&gt; placeholders still in &lt;code&gt;.en&lt;/code&gt;. Plan: add a pre-publish check.">Daily reports were published with <code>[EN]</code> placeholders still in <code>.en</code>. Plan: add a pre-publish check.</p></div>
+  </section>
+
+  <!-- PATTERNS -->
+  <section id="patterns">
+    <h2 data-zh="📊 模式观察" data-en="📊 Patterns">📊 Patterns</h2>
+    <div class="pattern" data-zh="同类错误出现 2 次 → 提取为 workflow pattern，后续周同类摩擦明显下降。" data-en="Same mistake twice → extracted as a workflow pattern; that friction type dropped in the following weeks.">Same mistake twice → extracted as a workflow pattern; that friction type dropped in the following weeks.</div>
+<div class="pattern" data-zh="代码级约束（gate、lint）比文字规则更稳定：文字规则修复后平均复发 1.5 次，代码约束 0 次。" data-en="Code-level guards (gate, lint) hold better than text rules: text-rule fixes recurred 1.5× on average, code guards 0×.">Code-level guards (gate, lint) hold better than text rules: text-rule fixes recurred 1.5× on average, code guards 0×.</div>
+  </section>
+
+  <!-- DATA TABLE -->
+  <section id="data">
+    <h2 data-zh="📋 数据" data-en="📋 Data">📋 Data</h2>
+    <table><thead><tr><th data-zh="周" data-en="Week">Week</th><th data-zh="会话" data-en="Sessions">Sessions</th><th data-zh="摩擦" data-en="Friction">Friction</th><th data-zh="已解决" data-en="Resolved">Resolved</th></tr></thead><tbody><tr><td>W43</td><td>21</td><td>11</td><td>2</td></tr><tr><td>W44</td><td>24</td><td>9</td><td>4</td></tr><tr><td>W45</td><td>25</td><td>8</td><td>5</td></tr><tr><td>W46</td><td>23</td><td>5</td><td>4</td></tr><tr><td>W47</td><td>26</td><td>4</td><td>4</td></tr><tr><td>W48</td><td>23</td><td>2</td><td>3</td></tr></tbody></table>
+  </section>
+
+  <!-- ACTIONS -->
+  <section id="actions">
+    <h2 data-zh="📌 行动项" data-en="📌 Action Items">📌 Action Items</h2>
+    <div class="card suggestion"><p data-zh="publish 前检查 &lt;code&gt;[EN]&lt;/code&gt; 占位，存在则阻断" data-en="Block publish when &lt;code&gt;[EN]&lt;/code&gt; placeholders remain">Block publish when <code>[EN]</code> placeholders remain</p></div>
+<div class="card suggestion"><p data-zh="把剩余 2 条纯文字规则迁移为 gate 规则" data-en="Move the remaining 2 text-only rules into gate policy">Move the remaining 2 text-only rules into gate policy</p></div>
+  </section>
+
+  <!-- RECOMMENDATION -->
+  <section id="recommendation">
+    <h2 data-zh="💡 建议" data-en="💡 Recommendation">💡 Recommendation</h2>
+    <div class="rec"><p data-zh="优先把高频摩擦写成代码约束，而不是追加文字规则；文字规则只保留无法机器判定的部分。" data-en="Turn frequent friction into code-level guards rather than adding more text rules; keep text rules only for what a machine cannot check.">Turn frequent friction into code-level guards rather than adding more text rules; keep text rules only for what a machine cannot check.</p></div>
+  </section>
+
+</div>
+
+<script>
+function switchLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.nav-controls button').forEach(b => b.classList.remove('active'));
+  document.getElementById(lang === 'zh-CN' ? 'btnZh' : 'btnEn').classList.add('active');
+  const isZh = lang === 'zh-CN';
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    el.innerHTML = isZh ? el.getAttribute('data-zh') : el.getAttribute('data-en');
+  });
+}
+function toggleTheme() {
+  const d = document.documentElement;
+  d.dataset.theme = d.dataset.theme === 'dark' ? '' : 'dark';
+  document.getElementById('btnTheme').innerHTML = d.dataset.theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+}
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progressBar').style.width = (h > 0 ? window.scrollY / h * 100 : 0) + '%';
+  document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 300);
+});
+// Default to English
+switchLang('en');
+</script>
+<script>
+/* kiro-fx v1: card spotlight (one delegated listener, rAF-throttled; off under reduced motion) */
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let raf = 0, last = null, x = 0, y = 0;
+  document.addEventListener('mousemove', e => {
+    const card = e.target.closest && e.target.closest('.card, .stat-card');
+    if (last && last !== card) { last.style.removeProperty('--mx'); last.style.removeProperty('--my'); }
+    last = card; x = e.clientX; y = e.clientY;          // listener only records; rAF reads the latest
+    if (!card || raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!last) return;
+      const r = last.getBoundingClientRect();
+      last.style.setProperty('--mx', (x - r.left) + 'px');
+      last.style.setProperty('--my', (y - r.top) + 'px');
+    });
+  });
+})();
+</script>
+</body>
+</html>

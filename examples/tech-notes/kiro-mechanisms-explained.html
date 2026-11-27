@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiro 核心机制 · 理解 / 介绍 / 英语说明稿</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ivory:#FAF9F5; --paper:#FFFFFF; --slate:#141413;
+    --clay:#D97757; --clay-d:#B85C3E; --clay-light:#F4E0D9;
+    --olive:#788C5D; --olive-light:#E8F0DE;
+    --amber:#B8860B; --red:#C44B4B; --blue:#4B7BC4;
+    --g100:#F0EEE6; --g200:#E6E3DA; --g300:#D1CFC5; --g500:#87867F; --g700:#3D3D3A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Roboto',sans-serif; color:var(--slate); background:var(--ivory); line-height:1.6; font-size:10.5pt;}
+  .page{max-width:900px; margin:0 auto; padding:28px 34px;}
+  h1{font-size:21pt; font-weight:700; color:var(--clay-d); margin-bottom:4px; letter-spacing:-.5px;}
+  .sub{color:var(--g500); font-size:9.5pt; margin-bottom:18px; border-bottom:2px solid var(--clay-light); padding-bottom:10px;}
+  h2{font-size:14pt; font-weight:700; color:var(--slate); margin:20px 0 8px; padding-left:10px; border-left:4px solid var(--clay);}
+  h3{font-size:11.5pt; font-weight:500; color:var(--clay-d); margin:15px 0 6px; padding-bottom:3px; border-bottom:1px dashed var(--g300);}
+  h4{font-size:10.5pt; font-weight:500; color:var(--g700); margin:11px 0 5px;}
+  p{margin-bottom:8px;}
+  strong{font-weight:500; color:var(--g700);}
+  em{color:var(--clay-d); font-style:normal; font-weight:500;}
+  .lead{background:var(--clay-light); border-radius:6px; padding:12px 16px; margin-bottom:14px;}
+  ul,ol{margin:6px 0 10px 22px;} li{margin-bottom:4px;}
+  table{width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:9.5pt;}
+  th{background:var(--g100); text-align:left; padding:6px 9px; font-weight:500; border:1px solid var(--g300);}
+  td{padding:6px 9px; border:1px solid var(--g300); vertical-align:top;}
+  tr:nth-child(even) td{background:#FCFBF7;}
+  code{font-family:'Roboto Mono',monospace; background:var(--g100); padding:1px 5px; border-radius:3px; font-size:9pt; color:var(--clay-d);}
+  .script{border-left:3px solid var(--olive); background:var(--olive-light); padding:10px 14px; border-radius:0 5px 5px 0; margin:8px 0 12px; font-size:10pt; font-style:italic;}
+  .script strong{font-style:normal;}
+  .analogy{border-left:3px solid var(--blue); background:#EAF1FA; padding:10px 14px; border-radius:0 5px 5px 0; margin:8px 0 12px;}
+  .key{background:var(--slate); color:var(--ivory); border-radius:6px; padding:11px 16px; margin:12px 0; font-size:10pt;}
+  .key strong{color:var(--clay-light);}
+  .tier-label{display:inline-block; background:var(--clay); color:#fff; font-size:8pt; font-weight:500; padding:2px 9px; border-radius:10px; margin-right:6px;}
+  footer{margin-top:22px; padding-top:10px; border-top:1px solid var(--g300); color:var(--g500); font-size:8.5pt; display:flex; justify-content:space-between;}
+  section{break-inside:avoid;}
+  h2,h3{break-after:avoid;}
+  table,.lead,.script,.analogy,.key{break-inside:avoid;}
+  @page{size:A4; margin:14mm 12mm;}
+  .pagebreak{break-before:page; page-break-before:always; height:0;}
+  @media print{ body{background:#fff; font-size:10pt;} .page{max-width:none; margin:0; padding:0;} a{color:inherit;text-decoration:none;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Kiro 核心机制 · 通俗理解手册</h1>
+  <div class="sub">每个机制三层：① 大白话理解 → ② 中文介绍 → ③ 英语说明稿 &nbsp;|&nbsp; the author &nbsp;|&nbsp; 2026-09-11</div>
+
+  <div class="lead">
+    这份文档的目的：<strong>先让你自己真正懂，再让你能自信地讲给别人。</strong>两个机制骨子里是同一种思考路径——<em>面对不可靠的东西，不靠信任，靠制度。</em>
+  </div>
+
+  <!-- ================= 机制 1 ================= -->
+  <h2>机制一 · 分层分析 + 反偏见交接</h2>
+  <p style="color:var(--g500);font-size:9pt;">对应真实实现：<code>analyze-job.py</code>（L1→L2→L3 分层）、<code>triage.py</code>（第一层分类）&nbsp;·&nbsp; 对应能力：Orchestration 编排</p>
+
+  <section>
+    <h3><span class="tier-label">① 理解</span>大白话 + 生活类比</h3>
+    <h4>它要解决的问题</h4>
+    <p>想象你是医院院长，每天几百个病人。<strong>如果每个病人一进门就直接上最贵的主任医师做全套检查</strong>（CT、核磁、专家会诊全上）——太贵、太慢，大部分人根本用不着。</p>
+    <p>在我的系统里，"病人"就是每天几百个测试失败。每个都直接调最贵的 AI 做最深分析，一样又贵又慢。</p>
+    <h4>我的解法：像医院一样"分诊"</h4>
+    <div class="analogy">
+      <strong>便宜的先上，贵的后上：</strong>
+      <ul>
+        <li><strong>第一层（护士台）</strong>：最便宜，快速看一眼。大部分失败一眼能归类——"老毛病，见过""环境抽风，重跑就行"。<strong>几百个里大多数在这层就解决</strong>，不惊动后面。</li>
+        <li><strong>第二层（门诊医生）</strong>：中等成本。拿不准的才到这里做初步判断——"我怀疑是 XX 原因"。</li>
+        <li><strong>第三层（专家会诊）</strong>：最贵。只有真正复杂、值得深挖的，才动用最深的分析验证。</li>
+      </ul>
+    </div>
+    <div class="key"><strong>核心思想一句话：</strong>别一上来就用最贵的手段，让便宜的先把简单情况筛掉。又快又省。</div>
+    <h4>最妙的一招：防止"先入为主"</h4>
+    <p>假设门诊医生写了个诊断"我觉得是肺炎"，转给专家。<strong>如果专家一开始就看到"肺炎"两个字</strong>，人的本能会不自觉往那个方向找证据、忽略其他可能——这叫"锚定效应"，医生和 AI 都会中招。</p>
+    <p>所以我做了个<em>反常识的设计</em>：交接时<strong>第一轮故意不把前面的结论告诉后面</strong>，让专家先独立看原始材料、形成自己的判断，<strong>之后</strong>才对照前面的结论。</p>
+    <div class="key"><strong>大白话：</strong>我故意让第二个人"蒙着眼"先自己判断，免得被第一个人的答案带跑偏。两个独立判断凑一起，比一个人带着偏见从头做可靠得多。</div>
+  </section>
+
+  <section>
+    <h3><span class="tier-label">② 介绍</span>中文（给同事快速讲）</h3>
+    <p>我处理测试失败用的是<strong>分层递进</strong>的思路：第一层做最便宜的快速分类，把"已知问题、环境问题、重跑即可"这类简单情况直接筛掉；拿不准的才进第二层生成假设；只有真正复杂的才进第三层做最深的分析验证。这样绝大多数失败在最便宜的一层就消化了，既快又省成本。</p>
+    <p>更关键的是我在层与层交接时加了一个<strong>反偏见设计</strong>：第一轮故意不把上一层的结论透露给下一层，让它先独立判断，之后再对照。这是从一个四角色对抗式 RCA 系统里学来的"信息屏障 / 反锚定"思想——避免下游被上游结论带偏。</p>
+  </section>
+
+  <section>
+    <h3><span class="tier-label">③ 英语</span>Spoken Script（当面讲给英语的人）</h3>
+    <div class="script">
+      <strong>Plain version:</strong> "The way I handle test failures is like hospital triage — the cheap, fast checks go first and filter out the simple cases, and only the genuinely complex ones get the expensive deep analysis. It's fast and cost-efficient. And I added one anti-bias trick on purpose: when one layer hands off to the next, I deliberately don't show the next layer the previous conclusion first — I let it judge independently, so it doesn't get anchored to someone else's answer."
+    </div>
+    <div class="script">
+      <strong>Technical version:</strong> "I built a layered L1-to-L3 analysis pipeline, cheapest-first. L1 does fast pattern-classification and resolves most failures — known issues, env flakes, rerun-needed. Only the uncertain ones escalate to L2 hypothesis generation, and only the genuinely hard ones reach L3 deep verification. The key design is a two-round anti-bias handoff: the first round withholds the upstream conclusion so the downstream forms an independent judgment — an information-barrier against anchoring, borrowed from a four-role adversarial RCA system I studied."
+    </div>
+  </section>
+
+  <div class="pagebreak"></div>
+
+  <!-- ================= 机制 2 ================= -->
+  <h2>机制二 · Harness = Guarantee, Prompt = Hope</h2>
+  <p style="color:var(--g500);font-size:9pt;">对应真实实现：结构化分类字段 + <code>error-patterns.json</code> 机械校验 &nbsp;·&nbsp; 对应能力：Tool-calling / 可靠性</p>
+
+  <section>
+    <h3><span class="tier-label">① 理解</span>大白话 + 生活类比</h3>
+    <h4>先翻译这句话本身</h4>
+    <ul>
+      <li><strong>prompt = hope（提示词 = 希望）</strong>：你跟 AI 说"请按这个格式输出"，这只是<em>希望</em>它照做。心情好就照做，不好就跑偏。</li>
+      <li><strong>harness = guarantee（框架 = 保证）</strong>：你在外面套一层<em>机械检查</em>，不管 AI 输出啥都拿规则卡一遍。这才是<em>保证</em>。</li>
+    </ul>
+    <div class="key">一句话：<strong>别指望 AI 自觉，要用规矩兜底。</strong></div>
+    <h4>它要解决的问题</h4>
+    <p>想象你请了个很聪明但偶尔不靠谱的实习生，让他填表："每个测试失败归成这五类之一。"大部分时候填得很好，但<strong>偶尔他会</strong>：自己发明第六种分类；一本正经填错、还看起来很有道理；编个根本不存在的原因、语气还特别肯定。</p>
+    <p><strong>最可怕的不是他填错，而是他填错时也一脸自信</strong>——你要是全信，错误就悄悄流到下游酿成大祸。AI 就是这个实习生。</p>
+    <h4>我的解法：出口装个"质检闸门"</h4>
+    <div class="analogy">
+      我不信任实习生的善意，在他交表的出口装了道机械质检：
+      <ol>
+        <li><strong>强制选项</strong>：分类只能是这五种，填别的直接打回——没法自创第六种。</li>
+        <li><strong>对照检查表</strong>：维护一个"错误特征库"（<code>error-patterns.json</code>），他的结论拿这个库机械核对，对不上就报错。</li>
+        <li><strong>错就大声报错</strong>（fail loudly）：质检不过当场停下、明确报错，<strong>绝不</strong>让可疑结果偷偷溜到下一步。</li>
+      </ol>
+    </div>
+    <h4>这跟 Memory Dream 是同一种思考</h4>
+    <div class="key">
+      <strong>两个机制骨子里是一个思想：不相信"会自觉做对"，用外部的、机械的规矩兜底。</strong><br>
+      · Memory Dream：不信自己会手动整理 → 靠调度 + 硬上限兜底<br>
+      · Harness：不信 AI 输出可靠 → 靠结构 + 机械校验兜底<br>
+      这就是你的思考路径——<em>面对不可靠的东西，不靠信任，靠制度。</em>
+    </div>
+  </section>
+
+  <section>
+    <h3><span class="tier-label">② 介绍</span>中文（给同事快速讲）</h3>
+    <p>我不假设 AI 一定会按要求输出——那只是"希望"。所以我在它的输出口套了一层<strong>机械校验</strong>：分类字段强制只能从固定几种里选，填别的直接打回；结果还要跟一个错误特征库（error-patterns.json）机械核对，对不上就当场报错、绝不放行。因为 AI 最危险的不是出错，而是<strong>出错时还很自信</strong>，会把错误静默传到下游。我的原则是：<em>靠规矩兜底，不靠 AI 自觉。</em></p>
+  </section>
+
+  <section>
+    <h3><span class="tier-label">③ 英语</span>Spoken Script（当面讲给英语的人）</h3>
+    <div class="script">
+      <strong>Plain version:</strong> "I don't assume the AI will output what I asked — that's just hope. So I put a mechanical check on its output: the classification can only be one of a fixed set, anything else gets rejected, and the result is cross-checked against an error-pattern library — if it doesn't match, it fails loudly on the spot. Because the dangerous thing about AI isn't that it gets things wrong — it's that it's confident when it's wrong. My rule is: rely on structure, not on the model's goodwill."
+    </div>
+    <div class="script">
+      <strong>The one-liner:</strong> "Harness is a guarantee; a prompt is only a hope. I validate structured output mechanically and fail loudly, rather than trusting the model to behave."
+    </div>
+  </section>
+
+  <!-- ================= 贯穿主线 ================= -->
+  <section>
+    <h2>贯穿两个机制的一条主线</h2>
+    <table>
+      <tr><th style="width:24%">机制</th><th style="width:32%">不信任什么</th><th>用什么兜底</th></tr>
+      <tr><td>分层 + 反偏见交接</td><td>不信任"一步到位"和"下游不被带偏"</td><td>分层筛选 + 交接时信息屏障</td></tr>
+      <tr><td>Harness = Guarantee</td><td>不信任"AI 会按要求输出"</td><td>结构化字段 + 机械校验，fail loudly</td></tr>
+      <tr><td>Memory Dream（参考）</td><td>不信任"会手动整理记忆"</td><td>定时调度 + 硬上限，never delete</td></tr>
+    </table>
+    <div class="key" style="text-align:center;">
+      面试/介绍时的一句话总纲：<br>
+      <strong>"面对不可靠的东西，我不靠信任，靠制度——用外部的、机械的、可审计的规矩来兜底。"</strong>
+    </div>
+  </section>
+
+  <footer>
+    <span>Kiro AI Assistant · Generated for the author</span>
+    <span>2026-09-11 · A4 print</span>
+  </footer>
+
+</div>
+<script src="../kiro-analytics.js" defer></script>
+</body>
+</html>
